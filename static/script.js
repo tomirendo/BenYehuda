@@ -88,7 +88,6 @@ $scope.open_piece = function(piece){
         console.log("Chapter : " + chapter_url)
         $http.get(chapter_url).
              success(function(data, status, headers, config) {
-                console.log("Got data " + data);
                 $scope.current_chapters.push(data);
                 check_chapters_status();
               }).
@@ -158,11 +157,17 @@ $scope.open_url = function(url){
     $window.open(url);
 };
 
-function range(start, stop, step){
-  var a=[start], b=start;
-  while(b<stop){b+=step;a.push(b)}
-  return a;
+$scope.remove_nikud = function (txt){
+    var res = ""
+    var minNikud = 1416;
+    var maxNikud = 1479;
+    var alef = 1488;
+
+    for (var i=0; i < txt.length; i++){
+        if (txt.charCodeAt(i) < minNikud || txt.charCodeAt(i) >= alef){
+            res += txt[i];
+        }
+    }
+    return res;
 };
-
-
 }]);

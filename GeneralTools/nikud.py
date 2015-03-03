@@ -31,3 +31,4 @@ def remove_nikud(txt,encoding="utf8"):
     if not was_unicode:
         return unicode_txt.encode(encoding)
     else :
+        return unicode_txt
