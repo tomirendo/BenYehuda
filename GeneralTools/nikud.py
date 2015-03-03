@@ -13,12 +13,12 @@ def remove_nikud(txt,encoding="utf8"):
     
     try :
         nikud_chars = [unichr(i) for i in range(min_nikud,alef)]
-        unicode_type = str
+        non_unicode_type = str
     except NameError :#Python3
         nikud_chars = [chr(i) for i in range(min_nikud,alef)]
-        unicode_type = bytes
+        non_unicode_type = bytes
         
-    if not isinstance(txt,unicode_type):
+    if not isinstance(txt,non_unicode_type):
         was_unicode = True
         unicode_txt = txt
     else :
