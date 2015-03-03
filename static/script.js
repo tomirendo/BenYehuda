@@ -157,4 +157,12 @@ $scope.open_url = function(url){
 
     $window.open(url);
 };
+
+function range(start, stop, step){
+  var a=[start], b=start;
+  while(b<stop){b+=step;a.push(b)}
+  return a;
+};
+
+
 }]);
