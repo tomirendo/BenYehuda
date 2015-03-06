@@ -143,6 +143,7 @@
      <br>
      <div width=100% ng-show="piece_show_side_nav" class="hebrew-align md-tile-content">
          <h3 class="hebrew-align "> {{ current_piece.name }} </h3>
+         <md-button ng-click="open_url('/download/'+current_piece.pk)">להורדה</md-button>
          <div ng-repeat="chapter in current_chapters">
      <md-button md-no-ink ng-click="show_chapter(chapter)" class="chapter-button">
           {{ chapter.index + ".  " + chapter.name }}
