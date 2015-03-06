@@ -56,3 +56,7 @@ bold {
 .chapter-button{
     font-size : 10px;
 }
+
+* {
+    font-family: "David" !important;
+  }

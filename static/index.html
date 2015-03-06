@@ -45,13 +45,6 @@
 
             </md-content>
            </div>
-                <!--SearchBar-->
-
-                <div class="input-group input-group-sm" ng-show="show_search_bar()">
-  <input type="text" class="form-control hebrew-align"  ng-model="search_bar" aria-describedby="sizing-addon3">
-                    <span class="input-group-addon" id="sizing-addon3">חיפוש<span>
-</div>
-
 
  <!--Cretors view-->
             <div class="creators" ng-show="show_creators">
@@ -61,7 +54,7 @@
           <div class="md-tile-left">
           </div>
           <div class="md-tile-content">
-            <h3 class="hebrew-align">{{creator.name}}</h3>
+            <h3 class="hebrew-align" ng-click="select_creator(creator)">{{creator.name}}</h3>
             <p class="hebrew-align">{{creator.description}}</p>
             <p class="hebrew-align " ng-show="creator.wikipedia_link != ''" ng-click="open_url(creator.wikipedia_link)">
                ויקיפדיה
@@ -124,12 +117,29 @@
                 </div>
             </div>
 
+                <single-creator ng-show="show_single_creator" info="selected_creator"></single-creator>
+
                 </md-content>
         </div>
  <md-sidenav layout="column" class="md-sidenav-right md-whiteframe-z2" md-component-id="left" md-is-locked-open="$media('gt-sm')">
+
+     <!--SEARCH BOX-->
+     <br>
+     <form ng-submit="showAdvanced($event)">
+                <div class="input-group input-group-sm" >
+  <input type="text" class="form-control hebrew-align"   ng-model="search_bar" aria-describedby="sizing-addon3" >
+                    <span class="input-group-addon" id="sizing-addon3">חיפוש<span>
+</div>
+     </form>
+     <br>
+
      <md-button ng-click="present_creators()">יוצרים</md-button>
      <md-button ng-click="present_translators()">מתרגמים</md-button>
      <md-button ng-click="present_pieces()"> יצירות</md-button>
+     <br>
+
+
+
      <br>
      <div width=100% ng-show="piece_show_side_nav" class="hebrew-align md-tile-content">
          <h3 class="hebrew-align "> {{ current_piece.name }} </h3>

@@ -1,0 +1,46 @@
+<md-dialog aria-label="Mango (Fruit)" >
+  <md-content>
+
+     <!--SEARCH BOX-->
+     <form ng-submit="submit(search_bar)">
+                <div class="input-group input-group-sm" >
+  <input type="text" class="form-control hebrew-align"   ng-model="search_bar" aria-describedby="sizing-addon3" >
+                    <span class="input-group-addon" id="sizing-addon3">חיפוש<span>
+</div>
+     </form>
+
+       <md-progress-circular  ng-show="show_load_bar" class="md-hue-2" md-mode="indeterminate"></md-progress-circular>
+
+
+
+ <!--Cretors view-->
+            <div class="creators" >
+                <md-list>
+      <md-item ng-repeat="creator in results">
+        <md-item-content>
+          <div class="md-tile-left">
+          </div>
+          <div class="md-tile-content">
+            <h3 class="hebrew-align" ng-click="hide();global_scope.select_creator(creator)">{{creator.name}}</h3>
+            <p class="hebrew-align">{{creator.description}}</p>
+            <p class="hebrew-align " ng-show="creator.wikipedia_link != ''" ng-click="global_scope.open_url(creator.wikipedia_link)">
+               ויקיפדיה
+            </p>
+          </div>
+        </md-item-content>
+      </md-item>
+    </md-list>
+
+            </div>
+
+  </md-content>
+  <div class="md-actions" layout="row">
+    <md-button href="http://en.wikipedia.org/wiki/Mango" target="_blank" hide show-md>
+      More on Wikipedia
+    </md-button>
+    <span flex></span>
+    <md-button ng-click="answer('not useful')">
+        סגור
+    </md-button>
+  </div>
+</md-dialog>

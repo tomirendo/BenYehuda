@@ -44,8 +44,9 @@ class TranslatorViewSet(viewsets.ReadOnlyModelViewSet):
 class PieceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Piece.objects.all()
     serializer_class = PieceSerializer
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ("name",)
+    filter_backends = (filters.SearchFilter,filters.DjangoFilterBackend)
+    search_fields = ("name","description")
+    filter_fields = ("creator",)
 
 class ChapterViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Chapter.objects.all()

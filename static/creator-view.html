@@ -1,0 +1,26 @@
+<div>
+<h3 class="hebrew-align">
+    {{ creator_info.creator.name }}
+</h3>
+    <p class="hebrew-align">
+        {{ creator_info.creator.description }}
+    </p>
+
+<!-- Pieces view -->
+
+<h6 class="hebrew-align">
+    יצירות
+</h6>
+<md-progress-circular ng-show="piece_show_progress_bar" class="md-hue-2" md-mode="indeterminate"></md-progress-circular>
+    <md-list>
+        <md-item ng-repeat="piece in creator_info.pieces | filter:search_bar">
+            <md-item-content>
+                <div class="md-tile-left">
+                </div>
+                <div class="md-tile-content">
+                    <h3 class="hebrew-align" ng-click="creator_info.scope.open_piece(piece)">{{piece.name}}</h3>
+                </div>
+            </md-item-content>
+        </md-item>
+    </md-list></div>
+</div>
