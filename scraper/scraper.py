@@ -1,7 +1,8 @@
-import sys
-import urllib3
-import json
 import os
+import sys
+# import urllib3
+import json
+from urllib import request
 from bs4 import BeautifulSoup
 
 ####################################################################
@@ -19,41 +20,42 @@ def benyehuda_scraper(url,creator,is_content_page):
     if is_content_page:
         print("got {}, which is a {}".format(url, "content page" if is_content_page else "links page"))
 
-    
+
     benyehuda_creators = []
     benyehuda_creators.append(url)
-    
+
     parsed_dict = {}
 
     #TODO: initialize by reading the config file, not url, later, and extract all the creater pages into a URL list
     #For now, assume we have only one creator and one file
 
     try:
-
-        http = urllib3.PoolManager()
-
         parsed_dict['creator']=creator
         chapters = []
 
         for i,item in enumerate(benyehuda_creators):
 
-            
+
             lines = []
 
-            r = http.request('GET', item)
-            print("request for {} from author: {} returned code {}\n".format(item, creator,r.status))
+            r = request.urlopen(item)
+            print("request for {} from author: {} returned code {}\n".format(
+                item,
+                creator,
+                r.code
+            ))
 
-            if r.status != 200:
-                raise Exception("Status code: %s" % r.status_code)
+            if r.code != 200:
+                raise Exception("Status code: %s" % r.code)
 
-            soup = BeautifulSoup(r.data)
-            
+            soup = BeautifulSoup(r.read())
+
             for link in soup.find_all("p", "a2"):
                     lines.append({"text_line":link.text})
                     #print("{}".format(link.text))
 
             chapter = {}
-            chapter["chapter_index"]=(str)(i+1)
+            chapter["chapter_index"]=str(i+1)
             chapter["full_text"]=lines
 
             chapters.append(chapter)
@@ -63,7 +65,7 @@ def benyehuda_scraper(url,creator,is_content_page):
         with open(_url_to_json_filename(benyehuda_creators[0]), 'w') as f:
             json.dump(parsed_dict,f)
 
-        
+
 
     except Exception as e:
         print("ERROR: %s" % e)
@@ -71,7 +73,7 @@ def benyehuda_scraper(url,creator,is_content_page):
 
     with open(_url_to_json_filename(benyehuda_creators[0])) as g:
         a = json.load(g)
-        print(a)
+        print(json.dumps(a, indent=4))
 
 def _url_to_json_filename(url):
     return "{}.json".format(os.path.basename(url))
