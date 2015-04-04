@@ -23,7 +23,31 @@ class Piece(object):
 
     def scrape_chapters(self):
         """
-        Creates the chapters from the page's html
+        Creates the chapters from the page's html.
+        Decideds which scraping function to use based on an "algorithm".
+
+        :return: List of chapters (each chapter is a simple dict)
+        :rtype: list[dict]
+        """
+        if len(self._soup.find_all("p", "a1")) == 0:
+            return self._scrape_t_p_a2()
+        return self._scrape_ch_a1_t_p()
+
+    def _scrape_t_p_a2(self):
+        """
+        Only one chapter.
+        Chapter text is <p class="a2">
+        """
+        return [{
+            "name": "",
+            "index": 0,
+            "text": "\n".join((e.text for e in self._soup.find_all("p", "a2"))),
+        }]
+
+    def _scrape_ch_a1_t_p(self):
+        """
+        Chapters are marked with <p class="a1">
+        Chapter text are just <p> after the chapter name
         """
         chapters = []
         chapter = None
@@ -51,6 +75,7 @@ class Piece(object):
             fixed_chapters.append(chapter)
 
         return fixed_chapters
+
 
     def as_dict(self):
         """
