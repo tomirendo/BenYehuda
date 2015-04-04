@@ -1,35 +1,6 @@
 from bs4 import BeautifulSoup
 from urllib import request
 
-class Chapter(object):
-    """
-    Chapters in a piece. The main text lives here
-    """
-    def __init__(self, name, index, text=[]):
-        """
-        :param name: Chapter name
-        :type name: str
-        :param index: Chapter index
-        :type index: int
-        :param text: Chapter text as a list of paragraphs
-        :type text: list[str]
-        """
-        self.name = name
-        self.index = index
-        self.text = text
-
-    def as_dict(self):
-        """
-        :return: The chapter as an easily jsonable dict. Text is combined to a str
-        :rtype: dict
-        """
-        return {
-            "name": self.name,
-            "index": self.index,
-            "text": "\n".join(self.text)
-        }
-
-
 class Piece(object):
     """
     Holds the piece's name, url and chapters.
