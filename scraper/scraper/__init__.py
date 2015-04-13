@@ -38,6 +38,31 @@ class Piece(object):
         self._soup = BeautifulSoup(html)
         self.chapters = self.scrape_chapters()
 
+    def collect_basic_stats(self):
+        """
+        Goes over the paragraphs in the page and creates basic statistics about
+        their classes
+
+        :return: A dict of class and details
+        :rtype: dict
+        """
+        class_stats = {}
+        for p in self._soup.find_all("p"):
+            # We currently don't handle plain paragraphs
+            if not p.get("class"):
+                continue
+            p_cls = tuple(p.get("class"))
+
+            if p_cls not in class_stats:
+                stat = class_stats[p_cls] = {}
+                stat["total"] = 0
+                stat["words"] = 0
+            else:
+                stat = class_stats[p_cls]
+            stat["total"] += 1
+            stat["words"] += len(p.text.split())
+        return class_stats
+
     def scrape_chapters(self):
         """
         Creates the chapters from the page's html.
@@ -46,9 +71,15 @@ class Piece(object):
         :return: List of chapters (each chapter is a simple dict)
         :rtype: list[dict]
         """
+        # Things we already know how to parse
         if self.url in self.KNOWN_URLS:
             func_name = "scrape_" + self.KNOWN_URLS[self.url]
             return getattr(self, func_name)()
+
+        class_stats = self.collect_basic_stats()
+
+
+
 
         if len(self._soup.find_all("p", "a1")) == 0:
             return self.scrape_text_from_p2_a2()
