@@ -33,6 +33,26 @@ class Piece(object):
             return self._scrape_t_p_a2()
         return self._scrape_ch_a1_t_p()
 
+    @staticmethod
+    def clean_text(element):
+        """
+        Removes whitespace from an element's text. Linebreaks and other
+        whitespaces inside a single tag are meaningless. IE:
+
+        >>> e = BeautifulSoup('''
+        ... <p>This whole thing
+        ... is just one line.       No need
+        ... for breaks!!!
+        ... </p>
+        ... ''')
+        >>> Piece.clean_text(e)
+        'This whole thing is just one line No need for breaks!!!'
+
+        :param element: An html element
+        :type element: bs4.element
+        """
+        return " ".join(element.text.split())
+
     def _scrape_t_p_a2(self):
         """
         Only one chapter.
@@ -41,7 +61,7 @@ class Piece(object):
         return [{
             "name": "",
             "index": 0,
-            "text": "\n".join((e.text for e in self._soup.find_all("p", "a2"))),
+            "text": "\n".join((self.clean_text(e) for e in self._soup.find_all("p", "a2"))),
         }]
 
     def _scrape_ch_a1_t_p(self):

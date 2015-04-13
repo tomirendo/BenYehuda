@@ -28,6 +28,7 @@ class PieceParseTest(unittest.TestCase):
         ]
     }
     """
+    maxDiff = None
     def test_piece_parsing(self):
         test_dir = os.path.join(os.path.dirname(__file__), "test_files")
         for piece_html in glob.iglob(os.path.join(test_dir, "*", "*.html")):
