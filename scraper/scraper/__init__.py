@@ -1,10 +1,27 @@
+import os
+import json
 from bs4 import BeautifulSoup
 from urllib import request
+
+
+def _get_curdir_json(filename):
+    """
+    :param filename: Name of json file to return (.json suffix not assumed)
+    :type filename: str
+    :return: Parsed json file from the current directory
+    :rtype: object
+    """
+    path = os.path.join(os.path.dirname(__file__), filename)
+    with open(path, 'r') as json_file:
+        return json.load(json_file)
+
 
 class Piece(object):
     """
     Holds the piece's name, url and chapters.
     """
+    KNOWN_URLS = _get_curdir_json("known_urls.json")
+
     def __init__(self, name, url, html=None):
         """
         :param name: Piece name
@@ -29,9 +46,13 @@ class Piece(object):
         :return: List of chapters (each chapter is a simple dict)
         :rtype: list[dict]
         """
+        if self.url in self.KNOWN_URLS:
+            func_name = "scrape_" + self.KNOWN_URLS[self.url]
+            return getattr(self, func_name)()
+
         if len(self._soup.find_all("p", "a1")) == 0:
-            return self._scrape_t_p_a2()
-        return self._scrape_ch_a1_t_p()
+            return self.scrape_text_from_p2_a2()
+        return self.scrape_chapter_from_a1_text_from_p()
 
     @staticmethod
     def clean_text(element):
@@ -53,7 +74,7 @@ class Piece(object):
         """
         return " ".join(element.text.split())
 
-    def _scrape_t_p_a2(self):
+    def scrape_text_from_p2_a2(self):
         """
         Only one chapter.
         Chapter text is <p class="a2">
@@ -64,7 +85,7 @@ class Piece(object):
             "text": "\n".join((self.clean_text(e) for e in self._soup.find_all("p", "a2"))),
         }]
 
-    def _scrape_ch_a1_t_p(self):
+    def scrape_chapter_from_a1_text_from_p(self):
         """
         Chapters are marked with <p class="a1">
         Chapter text are just <p> after the chapter name
@@ -74,7 +95,7 @@ class Piece(object):
         for p in self._soup.find_all("p"):
             if p.get("class") == ["a1"]:
                 chapter = {
-                    "name": p.text,
+                    "name": self.clean_text(p),
                     "index": len(chapters),
                     "text": [],
                 }
