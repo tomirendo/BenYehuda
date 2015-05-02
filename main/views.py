@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from models import Piece
+from .models import Piece
 # Create your views here.
 def download(request,id):
     p = Piece.objects.get(id = id)
