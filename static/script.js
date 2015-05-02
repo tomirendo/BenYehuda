@@ -126,7 +126,7 @@ $scope.selected_creator = null;
 $scope.select_creator = function(creator){
     console.log("Selecting Creator : " + creator)
     $scope.selected_creator = {creator : creator, pieces : [],scope : $scope};
-    $http.get('http://localhost:8000/api/piece/?creator='+creator.pk+'&format=json').
+    $http.get('/api/piece/?creator='+creator.pk+'&format=json').
   success(function(data, status, headers, config) {
     $scope.selected_creator.pieces = data;
     // this callback will be called asynchronously
@@ -139,7 +139,7 @@ $scope.select_creator = function(creator){
     $scope.present_single_creator();
 };
 
-$http.get('http://localhost:8000/api/translator/?format=json').
+$http.get('/api/translator/?format=json').
   success(function(data, status, headers, config) {
     $scope.translators = data;
     // this callback will be called asynchronously
@@ -150,7 +150,7 @@ $http.get('http://localhost:8000/api/translator/?format=json').
     // or server returns response with an error status.
   });
 
-$http.get('http://localhost:8000/api/creator/?format=json').
+$http.get('/api/creator/?format=json').
   success(function(data, status, headers, config) {
     $scope.creators = data;
     // this callback will be called asynchronously
@@ -160,7 +160,7 @@ $http.get('http://localhost:8000/api/creator/?format=json').
     // called asynchronously if an error occurs
     // or server returns response with an error status.
   });
-$http.get('http://localhost:8000/api/piece/?format=json').
+$http.get('/api/piece/?format=json').
   success(function(data, status, headers, config) {
     $scope.pieces= data;
     // this callback will be called asynchronously
@@ -207,7 +207,7 @@ function DialogController($scope, $mdDialog) {
     $scope.show_load_bar = true;
     global_scope.search_bar = $scope.search_bar;
 
-    $http.get("http://localhost:8000/api/creator/?search="+search_term+"&format=json").
+    $http.get("/api/creator/?search="+search_term+"&format=json").
     success(function(data, status, headers, config) {
     $scope.results= data;
     $scope.show_load_bar = false;

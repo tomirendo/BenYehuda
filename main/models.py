@@ -1,4 +1,5 @@
 from django.db import models
+from .NikudFunctions import remove_nikud
 
 # Create your models here.
 class Creator(models.Model):
@@ -28,6 +29,11 @@ class Piece(models.Model):
     def __str__(self):
         return "<piece : {}>".format(self.name.encode("utf8"))
 
+    def get_full_text(self):
+        return str.join("",(i.text for i in self.chapters))
+    def get_full_text_without_nikud(self):
+        return remove_nikud(self.get_full_text())
+
 class Chapter(models.Model):
     name = models.CharField(max_length = 250)
     text = models.TextField()
@@ -35,3 +41,4 @@ class Chapter(models.Model):
     index = models.IntegerField()
     def __str__(self):
         return "<chapter : {} >".format(self.name.encode("utf8"))
+

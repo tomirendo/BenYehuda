@@ -68,6 +68,8 @@ urlpatterns = patterns('',
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^download/(?P<id>\d+)/$', 'main.views.download'),
+    url(r'^search/', include('haystack.urls')),
+
 
     #url(r'^$','main.views.index'),
     #url(r'^script.js$','main.views.script'),
