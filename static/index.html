@@ -108,6 +108,14 @@
                 <h2 class="hebrew-align">{{ current_piece.name }}
                 <md-progress-circular ng-show="piece_show_progress_bar" class="md-hue-2" md-mode="indeterminate"></md-progress-circular>
                 </h2>
+                <div class="download-button">
+                   <md-button ng-click="open_url('/download/' + current_piece.pk)" class="md-primary md-raised">
+                       <bold>
+                           להורדה
+                       </bold>
+                       </md-button>
+                    </div>
+
                 <div class="chapter" ng-show="current_chapter != ''">
                     <h4 class="hebrew-align"> {{ current_chapter.name }} </h4>
                     <p class="hebrew-align hebrew-text">
@@ -143,7 +151,6 @@
      <br>
      <div width=100% ng-show="piece_show_side_nav" class="hebrew-align md-tile-content">
          <h3 class="hebrew-align "> {{ current_piece.name }} </h3>
-         <md-button ng-click="open_url('/download/'+current_piece.pk)">להורדה</md-button>
          <div ng-repeat="chapter in current_chapters">
      <md-button md-no-ink ng-click="show_chapter(chapter)" class="chapter-button">
           {{ chapter.index + ".  " + chapter.name }}
