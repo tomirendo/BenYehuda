@@ -1,7 +1,9 @@
 import os
 import json
-from bs4 import BeautifulSoup
 from urllib import request
+from collections import Counter, defaultdict
+
+from bs4 import BeautifulSoup
 
 
 def _get_curdir_json(filename):
@@ -14,6 +16,67 @@ def _get_curdir_json(filename):
     path = os.path.join(os.path.dirname(__file__), filename)
     with open(path, 'r') as json_file:
         return json.load(json_file)
+
+
+class PageProfile(object):
+    """
+    Collects basic statistics about text, paragraphs and CSS classes in a given
+    html page
+    """
+    def __init__(self, soup):
+        """
+        :param soup: The page data
+        :type soup: BeautifulSoup
+        """
+        self.soup = soup
+        self.major_class = None
+        self.minor_class = None
+        self._set_major_minor()
+
+    def _get_class_count(self):
+        """
+        Goes over the paragraphs in the page and creates basic statistics about
+        their classes. For each CSS class for <p> elements there's an object
+        with the number of paragraph and number of words in all paragraphs.
+
+        Output dict looks like:
+        {
+            "a2": {
+                "total": 34,
+                "words": 40
+            },
+            "a3": {
+                "total": 400,
+                "words": 5000
+            }
+        }
+
+        :return: A dict of class and details
+        :rtype: dict
+        """
+        class_stats = defaultdict(Counter)
+        for p in self.soup.find_all("p"):
+            # We currently don't handle plain paragraphs
+            if not p.get("class"):
+                continue
+            p_cls = tuple(p.get("class"))
+
+            class_stats[p_cls]["total"] += 1
+            class_stats[p_cls]["words"] += len(p.text.split())
+        return class_stats
+
+    def _set_major_minor(self):
+        class_count = self._get_class_count()
+        if not class_count:
+            return
+
+        # Sorts the classes by number of <p> tags
+        sorted_count = sorted(class_count.items(), key=lambda x: x[1]['total'])
+        if len(sorted_count) > 2:
+            self.major_class = sorted_count[-1]
+            self.minor_class = sorted_count[-2]
+        else:
+            self.major_class = sorted_count[0]
 
 
 class Piece(object):
@@ -38,30 +101,6 @@ class Piece(object):
         self._soup = BeautifulSoup(html)
         self.chapters = self.scrape_chapters()
 
-    def collect_basic_stats(self):
-        """
-        Goes over the paragraphs in the page and creates basic statistics about
-        their classes
-
-        :return: A dict of class and details
-        :rtype: dict
-        """
-        class_stats = {}
-        for p in self._soup.find_all("p"):
-            # We currently don't handle plain paragraphs
-            if not p.get("class"):
-                continue
-            p_cls = tuple(p.get("class"))
-
-            if p_cls not in class_stats:
-                stat = class_stats[p_cls] = {}
-                stat["total"] = 0
-                stat["words"] = 0
-            else:
-                stat = class_stats[p_cls]
-            stat["total"] += 1
-            stat["words"] += len(p.text.split())
-        return class_stats
 
     def scrape_chapters(self):
         """
@@ -76,10 +115,10 @@ class Piece(object):
             func_name = "scrape_" + self.KNOWN_URLS[self.url]
             return getattr(self, func_name)()
 
-        class_stats = self.collect_basic_stats()
+        stats = PageProfile(self._soup)
 
-
-
+        if stats.minor_class:
+            return self.scrape_minor(stats.minor_class)
 
         if len(self._soup.find_all("p", "a1")) == 0:
             return self.scrape_text_from_p2_a2()
@@ -104,6 +143,43 @@ class Piece(object):
         :type element: bs4.element
         """
         return " ".join(element.text.split())
+
+    def scrape_minor(self, minor):
+        """
+        Uses the given class to divide the paragraphs in the page to chapters
+        and main text
+        :param minor: The second most common class in the page
+        :type minor: tuple[str]
+        """
+        chapters = []
+        chapter = None
+        for p in self._soup.find_all("p"):
+            if tuple(p.get("class")) == minor:
+                if chapter and not chapter["text"]:
+                    chapter["name"].append(self.clean_text(p))
+                else:
+                    chapter = {
+                        "name": [self.clean_text(p)],
+                        "index": len(chapters),
+                        "text": []
+                    }
+                    chapters.append(chapter)
+                    continue
+
+            if chapter is None:
+                continue
+
+            chapter["text"].append(p.text)
+
+        fixed_chapters = []
+        for chapter in chapters:
+            if not chapter["text"]:
+                continue
+            chapter["index"] = len(fixed_chapters)
+            chapter["text"] = "\n".join(chapter["text"])
+            fixed_chapters.append(chapter)
+
+        return fixed_chapters
 
     def scrape_text_from_p2_a2(self):
         """
@@ -166,7 +242,7 @@ class Creator(object):
     Holds the creator's name and url
     """
     def __init__(self, name, url):
-        self.name = nane
+        self.name = name
         self.url = url
 
     def get_pieces(self):
