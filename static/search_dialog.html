@@ -16,14 +16,14 @@
  <!--Cretors view-->
             <div class="creators" >
                 <md-list>
-      <md-item ng-repeat="creator in results">
+      <md-item ng-repeat="doc in results">
         <md-item-content>
           <div class="md-tile-left">
           </div>
           <div class="md-tile-content">
-            <h3 class="hebrew-align" ng-click="hide();global_scope.select_creator(creator)">{{creator.name}}</h3>
-            <p class="hebrew-align">{{creator.description}}</p>
-            <p class="hebrew-align " ng-show="creator.wikipedia_link != ''" ng-click="global_scope.open_url(creator.wikipedia_link)">
+            <h3 class="hebrew-align" ng-click="hide();global_scope.select_creator(doc)">{{doc.name}}</h3>
+            <p class="hebrew-align">{{doc.description}}</p>
+          <p class="hebrew-align " ng-show="creator.wikipedia_link != ''" ng-click="global_scope.open_url(doc.wikipedia_link)">
                ויקיפדיה
             </p>
           </div>

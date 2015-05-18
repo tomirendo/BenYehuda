@@ -125,6 +125,9 @@ $scope.selected_creator = null;
 
 $scope.select_creator = function(creator){
     console.log("Selecting Creator : " + creator)
+    if (creator.id){
+      creator.pk = creator.id;
+    }
     $scope.selected_creator = {creator : creator, pieces : [],scope : $scope};
     $http.get('/api/piece/?creator='+creator.pk+'&format=json').
   success(function(data, status, headers, config) {
@@ -208,7 +211,7 @@ function DialogController($scope, $mdDialog) {
     global_scope.search_bar = $scope.search_bar;
 
     //$http.get("/api/creator/?search="+search_term+"&format=json").
-    $http.get("http://localhost:8983/solr/gettingstarted_shard1_replica1/select?q="+search_term+"&wt=json&indent=true")
+    $http.get("http://localhost:8983/solr/gettingstarted/select?q="+search_term+"&wt=json&indent=true")
     success(function(data, status, headers, config) {
     $scope.results= data.response.docs;
     $scope.show_load_bar = false;

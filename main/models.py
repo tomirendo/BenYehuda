@@ -15,7 +15,8 @@ class Creator(models.Model):
         return {'name' : self.name,
                 'description' : self.description,
                 'id' : self.id,
-                'object_type' : 'creator'}
+                'object_type' : 'creator',
+                'wikipedia_link' : self.wikipedia_link}
 
 
 class Translator(models.Model):
