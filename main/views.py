@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Piece
-from urllib2 import urlopen
+from urllib.request import urlopen
 
 def search(reqest,search_term):
     return urlopen("http://localhost:8983/solr/gettingstarted/select?q="+search_term+"&wt=json&indent=true").read()
