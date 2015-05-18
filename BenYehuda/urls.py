@@ -69,6 +69,7 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^download/(?P<id>\d+)/$', 'main.views.download'),
     url(r'^search/', include('haystack.urls')),
+    url(r'^search_solr/(?P<search_term>.+)/$','main.views.search'),
 
 
     #url(r'^$','main.views.index'),
