@@ -33,6 +33,12 @@ class Piece(models.Model):
         return str.join("",(i.text for i in self.chapters))
     def get_full_text_without_nikud(self):
         return remove_nikud(self.get_full_text())
+    def to_dict(self):
+        return {'name' : self.name,
+                'creator_name' : self.creator.name,
+                'creator_id' : self.creator.id,
+                'text' : self.get_full_text(),
+                'text_without_nikud' : self.get_full_text_without_nikud()}
 
 class Chapter(models.Model):
     name = models.CharField(max_length = 250)
