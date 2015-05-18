@@ -210,8 +210,7 @@ function DialogController($scope, $mdDialog) {
     $scope.show_load_bar = true;
     global_scope.search_bar = $scope.search_bar;
 
-    //$http.get("/api/creator/?search="+search_term+"&format=json").
-    $http.get("http://localhost:8983/solr/gettingstarted/select?q="+search_term+"&wt=json&indent=true")
+    $http.get("/api/search_solr/"+search_term+"/").
     success(function(data, status, headers, config) {
     $scope.results= data.response.docs;
     $scope.show_load_bar = false;
