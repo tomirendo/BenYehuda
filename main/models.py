@@ -14,7 +14,9 @@ class Creator(models.Model):
     def to_dict(self):
         return {'name' : self.name,
                 'description' : self.description,
-                'id' : self.id}
+                'object_id' : self.id,
+                'object_type' : 'creator'}
+
 
 class Translator(models.Model):
     name = models.CharField(max_length = 250)
@@ -43,7 +45,10 @@ class Piece(models.Model):
                 'creator_name' : self.creator.name,
                 'creator_id' : self.creator.id,
                 'text' : self.get_full_text(),
-                'text_without_nikud' : self.get_full_text_without_nikud()}
+                'text_without_nikud' : self.get_full_text_without_nikud(),
+                'object_id' : self.id,
+                'object_type' : 'piece'}
+
 
 class Chapter(models.Model):
     name = models.CharField(max_length = 250)

@@ -207,9 +207,10 @@ function DialogController($scope, $mdDialog) {
     $scope.show_load_bar = true;
     global_scope.search_bar = $scope.search_bar;
 
-    $http.get("/api/creator/?search="+search_term+"&format=json").
+    //$http.get("/api/creator/?search="+search_term+"&format=json").
+    $http.get("http://localhost:8983/solr/gettingstarted_shard1_replica1/select?q="+search_term+"&wt=json&indent=true")
     success(function(data, status, headers, config) {
-    $scope.results= data;
+    $scope.results= data.response.docs;
     $scope.show_load_bar = false;
 
     // this callback will be called asynchronously
