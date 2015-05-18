@@ -210,7 +210,7 @@ function DialogController($scope, $mdDialog) {
     $scope.show_load_bar = true;
     global_scope.search_bar = $scope.search_bar;
 
-    $http.get("/api/search_solr/"+search_term+"/").
+    $http.get("/search_solr/"+search_term+"/").
     success(function(data, status, headers, config) {
     $scope.results= data.response.docs;
     $scope.show_load_bar = false;
