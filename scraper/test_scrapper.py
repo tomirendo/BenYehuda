@@ -32,7 +32,7 @@ class PieceParseTest(unittest.TestCase):
     def test_piece_parsing(self):
         test_dir = os.path.join(os.path.dirname(__file__), "test_files")
         for piece_html in glob.iglob(os.path.join(test_dir, "*", "*.html")):
-            html = open(piece_html, 'rb').read()
+            html = open(piece_html, 'r').read()
             piece_json = os.path.splitext(piece_html)[0] + ".json"
             with open(piece_json, 'r', encoding="utf-8") as f:
                 details = json.load(f)
