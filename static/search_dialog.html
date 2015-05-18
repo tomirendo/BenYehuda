@@ -21,8 +21,8 @@
           <div class="md-tile-left">
           </div>
           <div class="md-tile-content">
-            <h3 class="hebrew-align" ng-click="hide();global_scope.select_creator(doc)">{{doc.name}}</h3>
-            <p class="hebrew-align">{{doc.description}}</p>
+            <h3 class="hebrew-align" ng-click="hide();global_scope.select_creator(doc)">{{doc.name[0]}}</h3>
+            <p class="hebrew-align">{{doc.description[0]}}</p>
           <p class="hebrew-align " ng-show="creator.wikipedia_link != ''" ng-click="global_scope.open_url(doc.wikipedia_link)">
                ויקיפדיה
             </p>
