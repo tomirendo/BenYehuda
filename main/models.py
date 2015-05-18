@@ -14,7 +14,7 @@ class Creator(models.Model):
     def to_dict(self):
         return {'name' : self.name,
                 'description' : self.description,
-                'object_id' : self.id,
+                'id' : self.id,
                 'object_type' : 'creator'}
 
 
@@ -46,7 +46,7 @@ class Piece(models.Model):
                 'creator_id' : self.creator.id,
                 'text' : self.get_full_text(),
                 'text_without_nikud' : self.get_full_text_without_nikud(),
-                'object_id' : self.id,
+                'id' : self.id,
                 'object_type' : 'piece'}
 
 
