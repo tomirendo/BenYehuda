@@ -11,6 +11,11 @@ class Creator(models.Model):
     def __str__(self):
         return "<creator : {}>".format(self.name.encode("utf8"))
 
+    def to_dict(self):
+        return {'name' : self.name,
+                'description' : self.description,
+                'id' : self.id}
+
 class Translator(models.Model):
     name = models.CharField(max_length = 250)
     birth = models.IntegerField(default = 1900)
