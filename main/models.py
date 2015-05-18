@@ -30,7 +30,7 @@ class Piece(models.Model):
         return "<piece : {}>".format(self.name.encode("utf8"))
 
     def get_full_text(self):
-        return str.join("",(i.text for i in self.chapters))
+        return str.join("",(i.text for i in self.chapters.all()))
     def get_full_text_without_nikud(self):
         return remove_nikud(self.get_full_text())
     def to_dict(self):
