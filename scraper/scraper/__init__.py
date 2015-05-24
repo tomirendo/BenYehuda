@@ -1,9 +1,31 @@
 import os
 import json
+from enum import Enum
 from urllib import request
 from collections import Counter, defaultdict
 
 from bs4 import BeautifulSoup
+
+def text_p_filter(tag):
+    """
+    Filter used with BeautifulSoup's find method to get all the paragraphs with
+    text in them:
+
+    >>> soup = BeautifulSoup('<p></p><p><span>Hello1</span></p>')
+    >>> soup.find(text_p_filter)
+    <p><span>Hello1</span></p>
+    """
+    return tag.name == 'p' and tag.text
+
+class ClsSize(Enum):
+    """
+    Enum for the different class sizes for easy understanding
+    """
+    plain = 0
+    major_title = 1
+    chapter_title = 2
+    subchapter_title = 3
+    highlighted = 4
 
 
 def _get_curdir_json(filename):
@@ -28,10 +50,61 @@ class PageProfile(object):
         :param soup: The page data
         :type soup: BeautifulSoup
         """
-        self.soup = soup
+        self._soup = soup
+        self.class_count = self._get_class_count()
+        self.class_sizes = self._get_class_sizes()
+        self.total_words = sum(v["words"] for v in self.class_count.values())
+
         self.major_class = None
         self.minor_class = None
         self._set_major_minor()
+
+    @staticmethod
+    def _cls_sort_key(cls_details):
+        """
+        Sorting key used for class_count dictionary
+        """
+        return cls_details[1]["total"]
+
+    def _get_class_sizes(self):
+        """
+        Goes over the document and calculates the class sizes based on the
+        following assumptions (rules are organized by priority):
+        1. The first <p> class is the Piece's title
+        2. The most common class is the plain text
+        3. The second most common is the chapter titles
+        4. Third most common is the subchapter titles
+        5. Fourth most common is highlited text
+
+        The sizes are mapped to `self._class_sizes`
+        """
+        class_sizes = {}
+        first_p = self._soup.find(text_p_filter)
+        class_sizes[tuple(first_p.get("class"))] = ClsSize.major_title
+        # used to map the class_sizes len to the appropriate ClsSize
+        len_to_size = {
+            1: ClsSize.plain,
+            2: ClsSize.chapter_title,
+            3: ClsSize.subchapter_title,
+            4: ClsSize.highlighted
+        }
+
+        # Sorts the classes by number of <p> tags - highest to lowest
+        sorted_count = sorted(self.class_count.items(), key=self._cls_sort_key,
+                              reverse=True)
+        for cls_details in sorted_count:
+            cls = cls_details[0]
+            if cls in class_sizes:
+                continue
+
+            cls_size_len = len(class_sizes)
+            if cls_size_len in len_to_size:
+                class_sizes[cls] = len_to_size[cls_size_len]
+            else:
+                # We already found all the major classes
+                break
+
+        return class_sizes
 
     def _get_class_count(self):
         """
@@ -41,11 +114,11 @@ class PageProfile(object):
 
         Output dict looks like:
         {
-            "a2": {
+            ("a2",) : {
                 "total": 34,
                 "words": 40
             },
-            "a3": {
+            ("a3",) : {
                 "total": 400,
                 "words": 5000
             }
@@ -55,7 +128,7 @@ class PageProfile(object):
         :rtype: dict
         """
         class_stats = defaultdict(Counter)
-        for p in self.soup.find_all("p"):
+        for p in self._soup.find_all("p"):
             # We currently don't handle plain paragraphs
             if not p.get("class"):
                 continue
@@ -66,25 +139,34 @@ class PageProfile(object):
         return class_stats
 
     def _set_major_minor(self):
-        class_count = self._get_class_count()
-        if not class_count:
+        if not self.class_count:
             return
 
         # Sorts the classes by number of <p> tags
-        sorted_count = sorted(class_count.items(), key=lambda x: x[1]['total'])
+        sorted_count = sorted(self.class_count.items(), key=self._cls_sort_key)
         if len(sorted_count) > 2:
             self.major_class = sorted_count[-1]
             self.minor_class = sorted_count[-2]
         else:
             self.major_class = sorted_count[0]
 
+    def get_class_value(self, name):
+        """
+        Returns the given CSS class name's relative value in the page acording.
+        If the given class name is not recognized it's returned as 'plain'
+
+        :param name: The elements classes
+        :type name: tuple[str]
+        :return: The class value acording to the ClsSize enum
+        :rtype: int
+        """
+        return self.class_sizes.get(name, ClsSize.plain)
+
 
 class Piece(object):
     """
     Holds the piece's name, url and chapters.
     """
-    KNOWN_URLS = _get_curdir_json("known_urls.json")
-
     def __init__(self, name, url, html=None):
         """
         :param name: Piece name
@@ -98,31 +180,9 @@ class Piece(object):
         self.url = url
         if html is None:
             html = request.urlopen(url).read()
-        self._soup = BeautifulSoup(html)
-        self.chapters = self.scrape_chapters()
-
-
-    def scrape_chapters(self):
-        """
-        Creates the chapters from the page's html.
-        Decideds which scraping function to use based on an "algorithm".
-
-        :return: List of chapters (each chapter is a simple dict)
-        :rtype: list[dict]
-        """
-        # Things we already know how to parse
-        if self.url in self.KNOWN_URLS:
-            func_name = "scrape_" + self.KNOWN_URLS[self.url]
-            return getattr(self, func_name)()
-
-        stats = PageProfile(self._soup)
-
-        if stats.minor_class:
-            return self.scrape_minor(stats.minor_class)
-
-        if len(self._soup.find_all("p", "a1")) == 0:
-            return self.scrape_text_from_p2_a2()
-        return self.scrape_chapter_from_a1_text_from_p()
+        self.soup = BeautifulSoup(html)
+        self.profile = PageProfile(self.soup)
+        self.contents = self._scrape_contents()
 
     @staticmethod
     def clean_text(element):
@@ -144,96 +204,75 @@ class Piece(object):
         """
         return " ".join(element.text.split())
 
-    def scrape_minor(self, minor):
+    def _scrape_contents(self):
         """
-        Uses the given class to divide the paragraphs in the page to chapters
-        and main text
-        :param minor: The second most common class in the page
-        :type minor: tuple[str]
+        Goes over the <p> elemnts in the piece and creates a list of the
+        contents in an internal format of a list of dicts. As json it will look
+        like::
+
+            [
+                { "text": "The Never Ending Story", "type": 1 },
+                { "text": "Chapter 1", "type": 2 },
+                { "text": "The End", "type": 0 }
+            ]
+
+        The type of each element in the list is a reference to the ClsSize enum
+
+        :return: The main contents of this piece
+        :rtype: list[dict]
         """
-        chapters = []
-        chapter = None
-        for p in self._soup.find_all("p"):
-            if tuple(p.get("class")) == minor:
-                if chapter and not chapter["text"]:
-                    chapter["name"].append(self.clean_text(p))
-                else:
-                    chapter = {
-                        "name": [self.clean_text(p)],
-                        "index": len(chapters),
-                        "text": []
-                    }
-                    chapters.append(chapter)
-                    continue
+        contents = []
+        for tag in self.soup.find_all(text_p_filter):
+            contents.append({
+                "text": self.clean_text(tag),
+                "type": self.profile.get_class_value(tuple(tag.get("class")))
+            })
+        return contents
 
-            if chapter is None:
-                continue
-
-            chapter["text"].append(p.text)
-
-        fixed_chapters = []
-        for chapter in chapters:
-            if not chapter["text"]:
-                continue
-            chapter["index"] = len(fixed_chapters)
-            chapter["text"] = "\n".join(chapter["text"])
-            fixed_chapters.append(chapter)
-
-        return fixed_chapters
-
-    def scrape_text_from_p2_a2(self):
+    @staticmethod
+    def markdown_map(item):
         """
-        Only one chapter.
-        Chapter text is <p class="a2">
+        :param item: A single element from the internal contents
+        :type item: dict
+        :return: The item as a markdown string
+        :rtype: str
         """
-        return [{
-            "name": "",
-            "index": 0,
-            "text": "\n".join((self.clean_text(e) for e in self._soup.find_all("p", "a2"))),
-        }]
+        if item["type"] == ClsSize.plain:
+            return item["text"]
 
-    def scrape_chapter_from_a1_text_from_p(self):
+        if item["type"] == ClsSize.major_title:
+            return "# " + item["text"]
+
+        if item["type"] == ClsSize.chapter_title:
+            return "## " + item["text"]
+
+        if item["type"] == ClsSize.subchapter_title:
+            return "### " + item["text"]
+
+        if item["type"] == ClsSize.highlighted:
+            return "*" + item["text"] + "*"
+
+        # We shouldn't reach this but just in case
+        return item["text"]
+
+    def as_markdown(self):
         """
-        Chapters are marked with <p class="a1">
-        Chapter text are just <p> after the chapter name
+        Converts the internal contents format to basic markdown language
+        :return: The chapter as markdown
+        :rtype: str
         """
-        chapters = []
-        chapter = None
-        for p in self._soup.find_all("p"):
-            if p.get("class") == ["a1"]:
-                chapter = {
-                    "name": self.clean_text(p),
-                    "index": len(chapters),
-                    "text": [],
-                }
-                chapters.append(chapter)
-                continue
-
-            if chapter is None:
-                continue
-
-            chapter["text"].append(p.text)
-
-        fixed_chapters = []
-        for chapter in chapters:
-            if not chapter["text"]:
-                continue
-            chapter["index"] = len(fixed_chapters)
-            chapter["text"] = "\n".join(chapter["text"])
-            fixed_chapters.append(chapter)
-
-        return fixed_chapters
-
+        # Two newlines are necessary to emphasize new paragraph
+        return "\r\n\r\n".join(map(self.markdown_map, self.contents))
 
     def as_dict(self):
         """
         :return: The piece as an easily jsonable dict
-        :rtype: dict
+        :rtype: dict[str]
         """
         return {
             "name": self.name,
             "url": self.url,
-            "chapters": self.chapters
+            "contents": self.contents
         }
 
 
