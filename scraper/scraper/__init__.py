@@ -53,7 +53,7 @@ class PageProfile(object):
         self._soup = soup
         self.class_count = self._get_class_count()
         self.class_sizes = self._get_class_sizes()
-        self.total_words = sum(v["words"] for v in self.class_count)
+        self.total_words = sum(v["words"] for v in self.class_count.values())
 
         self.major_class = None
         self.minor_class = None
@@ -168,8 +168,6 @@ class Piece(object):
     """
     Holds the piece's name, url and chapters.
     """
-    KNOWN_URLS = _get_curdir_json("known_urls.json")
-
     def __init__(self, name, url, html=None):
         """
         :param name: Piece name
