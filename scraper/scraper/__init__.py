@@ -53,6 +53,7 @@ class PageProfile(object):
         self._soup = soup
         self.class_count = self._get_class_count()
         self.class_sizes = self._get_class_sizes()
+        self.total_words = sum(v["words"] for v in self.class_count)
 
         self.major_class = None
         self.minor_class = None
@@ -185,7 +186,26 @@ class Piece(object):
         self.soup = BeautifulSoup(html)
         self.profile = PageProfile(self.soup)
         self.contents = self._scrape_contents()
-        # self.chapters = self.scrape_chapters()
+
+    @staticmethod
+    def clean_text(element):
+        """
+        Removes whitespace from an element's text. Linebreaks and other
+        whitespaces inside a single tag are meaningless. IE:
+
+        >>> e = BeautifulSoup('''
+        ... <p>This whole thing
+        ... is just one line.       No need
+        ... for breaks!!!
+        ... </p>
+        ... ''')
+        >>> Piece.clean_text(e)
+        'This whole thing is just one line No need for breaks!!!'
+
+        :param element: An html element
+        :type element: bs4.element
+        """
+        return " ".join(element.text.split())
 
     def _scrape_contents(self):
         """
@@ -247,138 +267,15 @@ class Piece(object):
         # Two newlines are necessary to emphasize new paragraph
         return "\r\n\r\n".join(map(self.markdown_map, self.contents))
 
-    def scrape_chapters(self):
-        """
-        Creates the chapters from the page's html.
-        Decideds which scraping function to use based on an "algorithm".
-
-        :return: List of chapters (each chapter is a simple dict)
-        :rtype: list[dict]
-        """
-        # Things we already know how to parse
-        if self.url in self.KNOWN_URLS:
-            func_name = "scrape_" + self.KNOWN_URLS[self.url]
-            return getattr(self, func_name)()
-
-        stats = PageProfile(self.soup)
-
-        if stats.minor_class:
-            return self.scrape_minor(stats.minor_class)
-
-        if len(self.soup.find_all("p", "a1")) == 0:
-            return self.scrape_text_from_p2_a2()
-        return self.scrape_chapter_from_a1_text_from_p()
-
-    @staticmethod
-    def clean_text(element):
-        """
-        Removes whitespace from an element's text. Linebreaks and other
-        whitespaces inside a single tag are meaningless. IE:
-
-        >>> e = BeautifulSoup('''
-        ... <p>This whole thing
-        ... is just one line.       No need
-        ... for breaks!!!
-        ... </p>
-        ... ''')
-        >>> Piece.clean_text(e)
-        'This whole thing is just one line No need for breaks!!!'
-
-        :param element: An html element
-        :type element: bs4.element
-        """
-        return " ".join(element.text.split())
-
-    def scrape_minor(self, minor):
-        """
-        Uses the given class to divide the paragraphs in the page to chapters
-        and main text
-        :param minor: The second most common class in the page
-        :type minor: tuple[str]
-        """
-        chapters = []
-        chapter = None
-        for p in self.soup.find_all("p"):
-            if tuple(p.get("class")) == minor:
-                if chapter and not chapter["text"]:
-                    chapter["name"].append(self.clean_text(p))
-                else:
-                    chapter = {
-                        "name": [self.clean_text(p)],
-                        "index": len(chapters),
-                        "text": []
-                    }
-                    chapters.append(chapter)
-                    continue
-
-            if chapter is None:
-                continue
-
-            chapter["text"].append(p.text)
-
-        fixed_chapters = []
-        for chapter in chapters:
-            if not chapter["text"]:
-                continue
-            chapter["index"] = len(fixed_chapters)
-            chapter["text"] = "\n".join(chapter["text"])
-            fixed_chapters.append(chapter)
-
-        return fixed_chapters
-
-    def scrape_text_from_p2_a2(self):
-        """
-        Only one chapter.
-        Chapter text is <p class="a2">
-        """
-        return [{
-            "name": "",
-            "index": 0,
-            "text": "\n".join((self.clean_text(e) for e in self.soup.find_all("p", "a2"))),
-        }]
-
-    def scrape_chapter_from_a1_text_from_p(self):
-        """
-        Chapters are marked with <p class="a1">
-        Chapter text are just <p> after the chapter name
-        """
-        chapters = []
-        chapter = None
-        for p in self.soup.find_all("p"):
-            if p.get("class") == ["a1"]:
-                chapter = {
-                    "name": self.clean_text(p),
-                    "index": len(chapters),
-                    "text": [],
-                }
-                chapters.append(chapter)
-                continue
-
-            if chapter is None:
-                continue
-
-            chapter["text"].append(p.text)
-
-        fixed_chapters = []
-        for chapter in chapters:
-            if not chapter["text"]:
-                continue
-            chapter["index"] = len(fixed_chapters)
-            chapter["text"] = "\n".join(chapter["text"])
-            fixed_chapters.append(chapter)
-
-        return fixed_chapters
-
-
     def as_dict(self):
         """
         :return: The piece as an easily jsonable dict
-        :rtype: dict
+        :rtype: dict[str]
         """
         return {
             "name": self.name,
             "url": self.url,
-            "chapters": self.chapters
+            "contents": self.contents
         }
 
 
