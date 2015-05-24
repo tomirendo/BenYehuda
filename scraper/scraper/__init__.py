@@ -15,7 +15,7 @@ def text_p_filter(tag):
     >>> soup.find(text_p_filter)
     <p><span>Hello1</span></p>
     """
-    return tag.name == 'p' and tag.text
+    return tag.name == 'p' and tag.text.strip() != ''
 
 class ClsSize(Enum):
     """
@@ -89,7 +89,8 @@ class PageProfile(object):
         }
 
         # Sorts the classes by number of <p> tags - highest to lowest
-        sorted_count = sorted(self.class_count.items(), key=self._cls_sort_key)
+        sorted_count = sorted(self.class_count.items(), key=self._cls_sort_key,
+                              reverse=True)
         for cls_details in sorted_count:
             cls = cls_details[0]
             if cls in class_sizes:
@@ -206,7 +207,7 @@ class Piece(object):
         contents = []
         for tag in self.soup.find_all(text_p_filter):
             contents.append({
-                "text": tag.text,
+                "text": self.clean_text(tag),
                 "type": self.profile.get_class_value(tuple(tag.get("class")))
             })
         return contents
