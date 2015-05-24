@@ -1,9 +1,31 @@
 import os
 import json
+from enum import Enum
 from urllib import request
 from collections import Counter, defaultdict
 
 from bs4 import BeautifulSoup
+
+def text_p_filter(tag):
+    """
+    Filter used with BeautifulSoup's find method to get all the paragraphs with
+    text in them:
+
+    >>> soup = BeautifulSoup('<p></p><p><span>Hello1</span></p>')
+    >>> soup.find(text_p_filter)
+    <p><span>Hello1</span></p>
+    """
+    return tag.name == 'p' and tag.text
+
+class ClsSize(Enum):
+    """
+    Enum for the different class sizes for easy understanding
+    """
+    plain = 0
+    major_title = 1
+    chapter_title = 2
+    subchapter_title = 3
+    highlighted = 4
 
 
 def _get_curdir_json(filename):
@@ -23,15 +45,59 @@ class PageProfile(object):
     Collects basic statistics about text, paragraphs and CSS classes in a given
     html page
     """
+    # Sorting key used for class_count dictionary
+    CLS_SORT_KEY = lambda x: x[1]["total"]
+
     def __init__(self, soup):
         """
         :param soup: The page data
         :type soup: BeautifulSoup
         """
-        self.soup = soup
+        self._soup = soup
+        self.class_count = self._get_class_count()
+        self.class_sizes = self._get_class_sizes()
+
         self.major_class = None
         self.minor_class = None
         self._set_major_minor()
+
+    def _get_class_sizes(self):
+        """
+        Goes over the document and calculates the class sizes based on the
+        following assumptions (rules are organized by priority):
+        1. The first <p> class is the Piece's title
+        2. The most common class is the plain text
+        3. The second most common is the chapter titles
+        4. Third most common is the subchapter titles
+        5. Fourth most common is highlited text
+
+        The sizes are mapped to `self._class_sizes`
+        """
+        class_sizes = {}
+        first_p = self._soup.find(text_p_filter)
+        class_sizes[tupe(first_p.get("class"))] = ClsSize.major_title
+        # used to map the class_sizes len to the appropriate ClsSize
+        len_to_size = {
+            1: ClsSize.plain,
+            2: ClsSize.chapter_title,
+            3: ClsSize.subchapter_title,
+            4: ClsSize.highlighted
+        }
+
+        # Sorts the classes by number of <p> tags - highest to lowest
+        sorted_count = sorted(self.class_count.items(), key=self.CLS_SORT_KEY)
+        for cls in sorted_count:
+            if cls in class_sizes:
+                continue
+
+            cls_size_len = len(class_sizes)
+            if cls_size_len in len_to_size:
+                class_sizes[cls] = len_to_size[cls_size_len]
+            else:
+                # We already found all the major classes
+                break
+
+        return class_sizes
 
     def _get_class_count(self):
         """
@@ -41,11 +107,11 @@ class PageProfile(object):
 
         Output dict looks like:
         {
-            "a2": {
+            ("a2",) : {
                 "total": 34,
                 "words": 40
             },
-            "a3": {
+            ("a3",) : {
                 "total": 400,
                 "words": 5000
             }
@@ -55,7 +121,7 @@ class PageProfile(object):
         :rtype: dict
         """
         class_stats = defaultdict(Counter)
-        for p in self.soup.find_all("p"):
+        for p in self._soup.find_all("p"):
             # We currently don't handle plain paragraphs
             if not p.get("class"):
                 continue
@@ -77,6 +143,18 @@ class PageProfile(object):
             self.minor_class = sorted_count[-2]
         else:
             self.major_class = sorted_count[0]
+
+    def get_class_value(self, name):
+        """
+        Returns the given CSS class name's relative value in the page acording.
+        If the given class name is not recognized it's returned as 'plain'
+
+        :param name: The class name
+        :type name: str
+        :return: The class value acording to the ClsSize enum
+        :rtype: int
+        """
+        return self._class_sizes.get(name, ClsSize.plain)
 
 
 class Piece(object):
