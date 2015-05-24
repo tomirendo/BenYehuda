@@ -15,7 +15,7 @@ def text_p_filter(tag):
     >>> soup.find(text_p_filter)
     <p><span>Hello1</span></p>
     """
-    return tag.name == 'p' and tag.text.strip() != ''
+    return tag.name == 'p' and tag.text
 
 class ClsSize(Enum):
     """
