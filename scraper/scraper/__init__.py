@@ -139,12 +139,11 @@ class PageProfile(object):
         return class_stats
 
     def _set_major_minor(self):
-        class_count = self._get_class_count()
-        if not class_count:
+        if not self.class_count:
             return
 
         # Sorts the classes by number of <p> tags
-        sorted_count = sorted(class_count.items(), key=lambda x: x[1]['total'])
+        sorted_count = sorted(class_count.items(), key=self._cls_sort_key)
         if len(sorted_count) > 2:
             self.major_class = sorted_count[-1]
             self.minor_class = sorted_count[-2]
