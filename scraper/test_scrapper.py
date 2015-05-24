@@ -3,7 +3,7 @@ import glob
 import json
 import unittest
 
-from scraper import Piece
+from scraper import Piece, ClsSize
 
 class PieceParseTest(unittest.TestCase):
     """
@@ -23,16 +23,10 @@ class PieceParseTest(unittest.TestCase):
                       html)
         self.assertEqual(piece.as_markdown(), md)
 
-
-    # # maxDiff = None
-    # def test_piece_parsing(self):
-    #     for piece_html in glob.iglob(os.path.join(test_dir, "*", "*.html")):
-    #         html = open(piece_html, 'r').read()
-    #         piece_json = os.path.splitext(piece_html)[0] + ".json"
-    #         with open(piece_json, 'r', encoding="utf-8") as f:
-    #             details = json.load(f)
-    #         p = Piece(name=details["name"], url=details["url"], html=html)
-    #         self.assertEqual(p.as_dict(), details)
-
-
-
+    def test_big_book(self):
+        html = self.get_t_file("bershadsky", "neged_hazerem.html")
+        md = self.get_t_file("bershadsky", "neged_hazerem_start.md")
+        piece = Piece("neged hazerem",
+                      "http://benyehuda.org/bershadsky/neged_hazerem.html",
+                      html)
+        self.assertTrue(piece.as_markdown().startswith(md))
