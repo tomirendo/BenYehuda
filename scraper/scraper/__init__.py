@@ -143,7 +143,7 @@ class PageProfile(object):
             return
 
         # Sorts the classes by number of <p> tags
-        sorted_count = sorted(class_count.items(), key=self._cls_sort_key)
+        sorted_count = sorted(self.class_count.items(), key=self._cls_sort_key)
         if len(sorted_count) > 2:
             self.major_class = sorted_count[-1]
             self.minor_class = sorted_count[-2]
