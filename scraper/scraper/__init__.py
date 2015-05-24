@@ -45,9 +45,6 @@ class PageProfile(object):
     Collects basic statistics about text, paragraphs and CSS classes in a given
     html page
     """
-    # Sorting key used for class_count dictionary
-    CLS_SORT_KEY = lambda x: x[1]["total"]
-
     def __init__(self, soup):
         """
         :param soup: The page data
@@ -60,6 +57,13 @@ class PageProfile(object):
         self.major_class = None
         self.minor_class = None
         self._set_major_minor()
+
+    @staticmethod
+    def _cls_sort_key(cls_details):
+        """
+        Sorting key used for class_count dictionary
+        """
+        return cls_details[1]["total"]
 
     def _get_class_sizes(self):
         """
@@ -75,7 +79,7 @@ class PageProfile(object):
         """
         class_sizes = {}
         first_p = self._soup.find(text_p_filter)
-        class_sizes[tupe(first_p.get("class"))] = ClsSize.major_title
+        class_sizes[tuple(first_p.get("class"))] = ClsSize.major_title
         # used to map the class_sizes len to the appropriate ClsSize
         len_to_size = {
             1: ClsSize.plain,
@@ -85,8 +89,9 @@ class PageProfile(object):
         }
 
         # Sorts the classes by number of <p> tags - highest to lowest
-        sorted_count = sorted(self.class_count.items(), key=self.CLS_SORT_KEY)
-        for cls in sorted_count:
+        sorted_count = sorted(self.class_count.items(), key=self._cls_sort_key)
+        for cls_details in sorted_count:
+            cls = cls_details[0]
             if cls in class_sizes:
                 continue
 
@@ -149,12 +154,12 @@ class PageProfile(object):
         Returns the given CSS class name's relative value in the page acording.
         If the given class name is not recognized it's returned as 'plain'
 
-        :param name: The class name
-        :type name: str
+        :param name: The elements classes
+        :type name: tuple[str]
         :return: The class value acording to the ClsSize enum
         :rtype: int
         """
-        return self._class_sizes.get(name, ClsSize.plain)
+        return self.class_sizes.get(name, ClsSize.plain)
 
 
 class Piece(object):
@@ -176,9 +181,70 @@ class Piece(object):
         self.url = url
         if html is None:
             html = request.urlopen(url).read()
-        self._soup = BeautifulSoup(html)
-        self.chapters = self.scrape_chapters()
+        self.soup = BeautifulSoup(html)
+        self.profile = PageProfile(self.soup)
+        self.contents = self._scrape_contents()
+        # self.chapters = self.scrape_chapters()
 
+    def _scrape_contents(self):
+        """
+        Goes over the <p> elemnts in the piece and creates a list of the
+        contents in an internal format of a list of dicts. As json it will look
+        like::
+
+            [
+                { "text": "The Never Ending Story", "type": 1 },
+                { "text": "Chapter 1", "type": 2 },
+                { "text": "The End", "type": 0 }
+            ]
+
+        The type of each element in the list is a reference to the ClsSize enum
+
+        :return: The main contents of this piece
+        :rtype: list[dict]
+        """
+        contents = []
+        for tag in self.soup.find_all(text_p_filter):
+            contents.append({
+                "text": tag.text,
+                "type": self.profile.get_class_value(tuple(tag.get("class")))
+            })
+        return contents
+
+    @staticmethod
+    def markdown_map(item):
+        """
+        :param item: A single element from the internal contents
+        :type item: dict
+        :return: The item as a markdown string
+        :rtype: str
+        """
+        if item["type"] == ClsSize.plain:
+            return item["text"]
+
+        if item["type"] == ClsSize.major_title:
+            return "# " + item["text"]
+
+        if item["type"] == ClsSize.chapter_title:
+            return "## " + item["text"]
+
+        if item["type"] == ClsSize.subchapter_title:
+            return "### " + item["text"]
+
+        if item["type"] == ClsSize.highlighted:
+            return "*" + item["text"] + "*"
+
+        # We shouldn't reach this but just in case
+        return item["text"]
+
+    def as_markdown(self):
+        """
+        Converts the internal contents format to basic markdown language
+        :return: The chapter as markdown
+        :rtype: str
+        """
+        # Two newlines are necessary to emphasize new paragraph
+        return "\r\n\r\n".join(map(self.markdown_map, self.contents))
 
     def scrape_chapters(self):
         """
@@ -193,12 +259,12 @@ class Piece(object):
             func_name = "scrape_" + self.KNOWN_URLS[self.url]
             return getattr(self, func_name)()
 
-        stats = PageProfile(self._soup)
+        stats = PageProfile(self.soup)
 
         if stats.minor_class:
             return self.scrape_minor(stats.minor_class)
 
-        if len(self._soup.find_all("p", "a1")) == 0:
+        if len(self.soup.find_all("p", "a1")) == 0:
             return self.scrape_text_from_p2_a2()
         return self.scrape_chapter_from_a1_text_from_p()
 
@@ -231,7 +297,7 @@ class Piece(object):
         """
         chapters = []
         chapter = None
-        for p in self._soup.find_all("p"):
+        for p in self.soup.find_all("p"):
             if tuple(p.get("class")) == minor:
                 if chapter and not chapter["text"]:
                     chapter["name"].append(self.clean_text(p))
@@ -267,7 +333,7 @@ class Piece(object):
         return [{
             "name": "",
             "index": 0,
-            "text": "\n".join((self.clean_text(e) for e in self._soup.find_all("p", "a2"))),
+            "text": "\n".join((self.clean_text(e) for e in self.soup.find_all("p", "a2"))),
         }]
 
     def scrape_chapter_from_a1_text_from_p(self):
@@ -277,7 +343,7 @@ class Piece(object):
         """
         chapters = []
         chapter = None
-        for p in self._soup.find_all("p"):
+        for p in self.soup.find_all("p"):
             if p.get("class") == ["a1"]:
                 chapter = {
                     "name": self.clean_text(p),
