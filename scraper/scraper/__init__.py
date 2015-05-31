@@ -19,7 +19,11 @@ def text_p_filter(tag):
     """
     if not (tag.name == 'p' and tag.text):
         return False
-    return not (tag.find_all('a'))
+    links = tag.find_all('a')
+    link_text = "".join(l.text for l in links)
+    if link_text == tag.text:
+        return False
+    return True
 
 class ClsSize(Enum):
     """
