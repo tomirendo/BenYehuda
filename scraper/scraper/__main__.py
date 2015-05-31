@@ -11,6 +11,7 @@ import argparse
 import threading
 import queue
 from urllib import request
+from urllib.error import URLError
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
@@ -64,7 +65,12 @@ def fetch_artist(output_dir, main_url):
                 os.mkdir(piece_folder)
                 piece_url = full_link + link
                 log.debug("Getting piece: %s", piece_url)
-                piece = Piece(piece_url)
+                try:
+                    piece = Piece(piece_url)
+                except URLError as err:
+                    log.error("Got url-error on piece: %s", piece_name)
+                    log.exception(err)
+                    continue
                 with open(os.path.join(piece_folder, piece_name + ".md"), 'w',
                           encoding="utf-8") as f:
                     f.write(piece.as_markdown())
