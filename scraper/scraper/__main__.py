@@ -28,46 +28,56 @@ def fetch_artist(output_dir, main_url):
     while link != DONE:
         href = link.get('href').lower()
         log = logging.getLogger(href[:-1])
-        log.debug("Started fetching artist")
-        full_link = main_url + "/" + href
-        name = link.text
-        artist_dir = os.path.join(output_dir, href[:-1])
-        os.mkdir(artist_dir)
-        with open(os.path.join(artist_dir, 'artist.json'), 'w', encoding="utf-8") as f:
-            json.dump({ "name": name, "url": full_link }, f,
-                      ensure_ascii=False, indent=4)
-        soup = BeautifulSoup(request.urlopen(full_link))
-        piece_links = []
-        for link in soup.find_all("a"):
-            href = urlparse(link.get('href')).path
-            if href in piece_links:
-                continue
+        try:
+            log.debug("Started fetching artist")
+            full_link = main_url + "/" + href
+            name = link.text
+            artist_dir = os.path.join(output_dir, href[:-1])
+            os.mkdir(artist_dir)
+            with open(os.path.join(artist_dir, 'artist.json'), 'w', encoding="utf-8") as f:
+                json.dump({ "name": name, "url": full_link }, f,
+                          ensure_ascii=False, indent=4)
+            soup = BeautifulSoup(request.urlopen(full_link))
+            piece_links = []
+            for link in soup.find_all("a"):
+                href = urlparse(link.get('href')).path
+                if not href:
+                    continue
 
-            if '/' in href:
-                continue
+                if href in piece_links:
+                    continue
 
-            piece_links.append(href)
+                if '/' in href:
+                    continue
 
-        log.debug("found %d pieces", len(piece_links))
-        for link in piece_links:
-            piece_name = os.path.splitext(link)[0]
-            piece_folder = os.path.join(artist_dir, piece_name)
-            log.debug("Creating folder for piece: %s", piece_name)
-            os.mkdir(piece_folder)
-            piece_url = full_link + "/" + link
-            log.debug("Getting piece: %s", piece_url)
-            piece = Piece(piece_url)
-            with open(os.path.join(piece_folder, piece_name + ".md"), 'w',
-                      encoding="utf-8") as f:
-                f.write(piece.as_markdown())
+                if "@" in href:
+                    continue
 
-            with open(os.path.join(piece_folder, piece_name + ".json"), 'w',
-                      encoding="utf-8") as f:
-                json.dump(piece.as_dict(), f, ensure_ascii=False, indent=4)
+                piece_links.append(href)
 
-        log.debug("Finished fetching artist")
-        artist_q.task_done()
-        link = artist_q.get()
+            log.debug("found %d pieces", len(piece_links))
+            for link in piece_links:
+                piece_name = os.path.splitext(link)[0]
+                piece_folder = os.path.join(artist_dir, piece_name)
+                log.debug("Creating folder for piece: %s", piece_folder)
+                os.mkdir(piece_folder)
+                piece_url = full_link + "/" + link
+                log.debug("Getting piece: %s", piece_url)
+                piece = Piece(piece_url)
+                with open(os.path.join(piece_folder, piece_name + ".md"), 'w',
+                          encoding="utf-8") as f:
+                    f.write(piece.as_markdown())
+
+                with open(os.path.join(piece_folder, piece_name + ".json"), 'w',
+                          encoding="utf-8") as f:
+                    json.dump(piece.as_dict(), f, ensure_ascii=False, indent=4)
+
+            log.debug("Finished fetching artist")
+        except Exception, err:
+            log.exception(err)
+        finally:
+            artist_q.task_done()
+            link = artist_q.get()
 
 def artist_a_filter(tag):
     """
