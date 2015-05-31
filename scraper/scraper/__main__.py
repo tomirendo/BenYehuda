@@ -73,7 +73,7 @@ def fetch_artist(output_dir, main_url):
                     json.dump(piece.as_dict(), f, ensure_ascii=False, indent=4)
 
             log.debug("Finished fetching artist")
-        except Exception, err:
+        except Exception as err:
             log.exception(err)
         finally:
             artist_q.task_done()
