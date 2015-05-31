@@ -102,7 +102,7 @@ class PageProfile(object):
                 continue
 
             # Wordless are ignored
-            if not cls_details[1]['words']:
+            if not cls_details[1]["words"]:
                 continue
 
             cls_size_len = len(class_sizes)
@@ -272,13 +272,47 @@ class Piece(object):
         # We shouldn't reach this but just in case
         return item["text"]
 
+    @staticmethod
+    def poem_markdown_map(item):
+        """
+        Converts markdown specifically for poems. Uses linebreaks instead of
+        paragraphs for most situations
+
+        :param item: A single element from the internal contents
+        :type item: dict
+        :return: The item as a markdown string
+        :rtype: str
+        """
+        if item["type"] == ClsSize.plain:
+            if item["text"]:
+                # Two spaces to indicate newline in markdown
+                return item["text"] + "  "
+            return "\r\n"
+
+        return Piece.markdown_map(item)
+
+    @staticmethod
+    def remove_last_empty_lines(lines):
+        """
+        :param lines: A list of text lines
+        :type lines: list[str]
+        :return: A list of lines were the last line has contents
+        :rtype: list[str]
+        """
+        while lines and not lines[-1].split():
+            lines.pop()
+        return lines
+
     def as_markdown(self):
         """
         Converts the internal contents format to basic markdown language
         :return: The chapter as markdown
         :rtype: str
         """
-        # Two newlines are necessary to emphasize new paragraph
+        if self.profile.is_poem():
+            lines = list(map(self.poem_markdown_map, self.contents))
+            return "\r\n".join(self.remove_last_empty_lines(lines))
+        # Two newlines are necessary for new paragraph in markdown
         return "\r\n\r\n".join(map(self.markdown_map, self.contents))
 
     def as_dict(self):
