@@ -287,7 +287,7 @@ class Piece(object):
             if item["text"]:
                 # Two spaces to indicate newline in markdown
                 return item["text"] + "  "
-            return "\r\n"
+            return "\n"
 
         return Piece.markdown_map(item)
 
@@ -311,9 +311,9 @@ class Piece(object):
         """
         if self.profile.is_poem():
             lines = list(map(self.poem_markdown_map, self.contents))
-            return "\r\n".join(self.remove_last_empty_lines(lines))
+            return "\n".join(self.remove_last_empty_lines(lines))
         # Two newlines are necessary for new paragraph in markdown
-        return "\r\n\r\n".join(map(self.markdown_map, self.contents))
+        return "\n\n".join(map(self.markdown_map, self.contents))
 
     def as_dict(self):
         """
