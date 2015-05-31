@@ -13,11 +13,12 @@ def text_p_filter(tag):
 
     >>> soup = BeautifulSoup('<p></p><p><span>Hello1</span></p>')
     >>> soup.find(text_p_filter)
-    <p><span>Hello1</span></p>
+    <p class="a1"><span>Hello1</span></p>
 
     It also removes paragraphs where the text is in <a> tags.
     """
-    if not (tag.name == 'p' and tag.text):
+    # Basic filtering - we won't work on paragraphs without class
+    if not (tag.name == 'p' and tag.text and tag.get("class")):
         return False
     links = tag.find_all('a')
     link_text = "".join(l.text for l in links)
