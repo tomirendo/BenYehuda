@@ -34,7 +34,8 @@ def fetch_artist(output_dir, main_url):
             name = link.text
             artist_dir = os.path.join(output_dir, href[:-1])
             os.mkdir(artist_dir)
-            with open(os.path.join(artist_dir, 'artist.json'), 'w', encoding="utf-8") as f:
+            with open(os.path.join(artist_dir, 'artist.json'), 'w',
+                      encoding="utf-8") as f:
                 json.dump({ "name": name, "url": full_link }, f,
                           ensure_ascii=False, indent=4)
             soup = BeautifulSoup(request.urlopen(full_link))
@@ -72,7 +73,7 @@ def fetch_artist(output_dir, main_url):
                           encoding="utf-8") as f:
                     json.dump(piece.as_dict(), f, ensure_ascii=False, indent=4)
 
-            log.debug("Finished fetching artist")
+            log.info("Finished fetching artist")
         except (KeyboardInterrupt, SystemExit):
             log.error("Got keyboard interrupt!")
             return
@@ -113,10 +114,11 @@ def main():
     parser.add_argument("output_dir", help="Where to save the pieces")
 
     arguments = parser.parse_args()
+    log_fmt = "%(asctime)s\t%(levelname)s\t%(thread)s-%(name)s\t%(message)s"
     if arguments.verbose:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(format=log_fmt, level=logging.DEBUG)
     else:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(format=log_fmt, level=logging.INFO)
 
     logging.info("writing to folder: %s", arguments.output_dir)
     os.mkdir(arguments.output_dir)
