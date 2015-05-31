@@ -18,8 +18,8 @@ class PieceParseTest(unittest.TestCase):
     def test_basic_poem(self):
         html = self.get_t_file("teller_zvi", "holy_seed.html")
         md = self.get_t_file("teller_zvi", "holy_seed.md")
-        piece = Piece("holy seed",
-                      "http://benyehuda.org/teller_zvi/zera.html",
+        piece = Piece("http://benyehuda.org/teller_zvi/zera.html",
+                      "holy seed",
                       html)
         self.assertTrue(piece.profile.is_poem())
         self.assertEqual(piece.as_markdown(), md)
@@ -27,10 +27,15 @@ class PieceParseTest(unittest.TestCase):
     def test_big_book(self):
         html = self.get_t_file("bershadsky", "neged_hazerem.html")
         md = self.get_t_file("bershadsky", "neged_hazerem_start.md")
-        piece = Piece("neged hazerem",
-                      "http://benyehuda.org/bershadsky/neged_hazerem.html",
+        piece = Piece("http://benyehuda.org/bershadsky/neged_hazerem.html",
+                      "neged hazerem",
                       html)
         self.assertFalse(piece.profile.is_poem())
         # The solution isn't optimal enough to validate such a big story. But
         # it works well enough to skip this for now
         # self.assertTrue(piece.as_markdown().startswith(md))
+
+    def test_piece_name(self):
+        html = self.get_t_file("bialik", "bia002.html")
+        piece = Piece("http://benyehuda.org/bialik/bia002.html", html=html)
+        self.assertEqual(piece.name, "מִשּׁוּט בַּמֶּרְחַקִּים")

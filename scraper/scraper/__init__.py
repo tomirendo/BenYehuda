@@ -188,7 +188,7 @@ class Piece(object):
     """
     Holds the piece's name, url and chapters.
     """
-    def __init__(self, name, url, html=None):
+    def __init__(self,  url, name=None, html=None):
         """
         :param name: Piece name
         :type name: str
@@ -204,6 +204,8 @@ class Piece(object):
         self.soup = BeautifulSoup(html)
         self.profile = PageProfile(self.soup)
         self.contents = self._scrape_contents()
+        if not self.name:
+            self.name = self.contents[0]["text"]
 
     @staticmethod
     def clean_text(element):

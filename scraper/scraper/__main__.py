@@ -5,6 +5,7 @@ directory structure.
 import os
 import sys
 import time
+import json
 import logging
 import argparse
 import threading
@@ -17,15 +18,24 @@ DONE = 1
 artist_q = queue.Queue()
 
 def fetch_artist(output_dir, main_url):
+    """
+    Reads artist links
+    """
     link = artist_q.get()
     while link != DONE:
+        log.debug("Started fetching artist")
         href = link.get('href').lower()
         full_link = main_url + "/" + href
         log = logging.getLogger(href[:-1])
-        log.debug("Started fetching artist")
         name = link.text
         artist_dir = os.path.join(output_dir, href)
+        os.mkdir(artist_dir)
+        with open(os.path.join(artist_dir, 'NAME')) as f:
+            json.dump({ "name": name, "url": full_link }, f,
+                      ensure_ascii=False, indent=4)
+
         soup = BeautifulSoup(request.url_open(full_link))
+        piece_links =
 
         log.debug("Finished fetching artist")
         artist_q.task_done()
@@ -88,7 +98,7 @@ def main():
 
 
     logging.info("Started going over %d links", len(links))
-    for link in links:
+    for link in clean_links:
         artist_q.put(link)
 
     for i in range(arguments.threads):
