@@ -14,8 +14,12 @@ def text_p_filter(tag):
     >>> soup = BeautifulSoup('<p></p><p><span>Hello1</span></p>')
     >>> soup.find(text_p_filter)
     <p><span>Hello1</span></p>
+
+    It also removes paragraphs where the text is in <a> tags.
     """
-    return tag.name == 'p' and tag.text
+    if not (tag.name == 'p' and tag.text):
+        return False
+    return not (tag.find_all('a'))
 
 class ClsSize(Enum):
     """
