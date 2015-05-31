@@ -11,8 +11,11 @@ import argparse
 import threading
 import queue
 from urllib import request
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
+
+from . import Piece
 
 DONE = 1
 artist_q = queue.Queue()
@@ -23,19 +26,44 @@ def fetch_artist(output_dir, main_url):
     """
     link = artist_q.get()
     while link != DONE:
-        log.debug("Started fetching artist")
         href = link.get('href').lower()
-        full_link = main_url + "/" + href
         log = logging.getLogger(href[:-1])
+        log.debug("Started fetching artist")
+        full_link = main_url + "/" + href
         name = link.text
-        artist_dir = os.path.join(output_dir, href)
+        artist_dir = os.path.join(output_dir, href[:-1])
         os.mkdir(artist_dir)
-        with open(os.path.join(artist_dir, 'NAME')) as f:
+        with open(os.path.join(artist_dir, 'artist.json'), 'w', encoding="utf-8") as f:
             json.dump({ "name": name, "url": full_link }, f,
                       ensure_ascii=False, indent=4)
+        soup = BeautifulSoup(request.urlopen(full_link))
+        piece_links = []
+        for link in soup.find_all("a"):
+            href = urlparse(link.get('href')).path
+            if href in piece_links:
+                continue
 
-        soup = BeautifulSoup(request.url_open(full_link))
-        piece_links =
+            if '/' in href:
+                continue
+
+            piece_links.append(href)
+
+        log.debug("found %d pieces", len(piece_links))
+        for link in piece_links:
+            piece_name = os.path.splitext(link)[0]
+            piece_folder = os.path.join(artist_dir, piece_name)
+            log.debug("Creating folder for piece: %s", piece_name)
+            os.mkdir(piece_folder)
+            piece_url = full_link + "/" + link
+            log.debug("Getting piece: %s", piece_url)
+            piece = Piece(piece_url)
+            with open(os.path.join(piece_folder, piece_name + ".md"), 'w',
+                      encoding="utf-8") as f:
+                f.write(piece.as_markdown())
+
+            with open(os.path.join(piece_folder, piece_name + ".json"), 'w',
+                      encoding="utf-8") as f:
+                json.dump(piece.as_dict(), f, ensure_ascii=False, indent=4)
 
         log.debug("Finished fetching artist")
         artist_q.task_done()
@@ -76,6 +104,9 @@ def main():
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
+
+    logging.info("writing to folder: %s", arguments.output_dir)
+    os.mkdir(arguments.output_dir)
 
     logging.info("using %d threads", arguments.threads)
     for i in range(arguments.threads):

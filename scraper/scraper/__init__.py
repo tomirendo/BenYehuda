@@ -1,6 +1,6 @@
 import os
 import json
-from enum import Enum
+from enum import IntEnum
 from urllib import request
 from collections import Counter, defaultdict
 
@@ -25,7 +25,7 @@ def text_p_filter(tag):
         return False
     return True
 
-class ClsSize(Enum):
+class ClsSize(IntEnum):
     """
     Enum for the different class sizes for easy understanding
     """
