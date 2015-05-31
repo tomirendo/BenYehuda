@@ -61,7 +61,7 @@ def fetch_artist(output_dir, main_url):
                 piece_folder = os.path.join(artist_dir, piece_name)
                 log.debug("Creating folder for piece: %s", piece_folder)
                 os.mkdir(piece_folder)
-                piece_url = full_link + "/" + link
+                piece_url = full_link + link
                 log.debug("Getting piece: %s", piece_url)
                 piece = Piece(piece_url)
                 with open(os.path.join(piece_folder, piece_name + ".md"), 'w',
@@ -73,6 +73,9 @@ def fetch_artist(output_dir, main_url):
                     json.dump(piece.as_dict(), f, ensure_ascii=False, indent=4)
 
             log.debug("Finished fetching artist")
+        except (KeyboardInterrupt, SystemExit):
+            log.error("Got keyboard interrupt!")
+            return
         except Exception as err:
             log.exception(err)
         finally:
