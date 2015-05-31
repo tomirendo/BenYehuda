@@ -101,6 +101,10 @@ class PageProfile(object):
             if cls in class_sizes:
                 continue
 
+            # Wordless are ignored
+            if not cls_details[1]['words']:
+                continue
+
             cls_size_len = len(class_sizes)
             if cls_size_len in len_to_size:
                 class_sizes[cls] = len_to_size[cls_size_len]
@@ -132,10 +136,11 @@ class PageProfile(object):
         :rtype: dict
         """
         class_stats = defaultdict(Counter)
-        for p in self._soup.find_all("p"):
+        for p in self._soup.find_all(text_p_filter):
             # We currently don't handle plain paragraphs
             if not p.get("class"):
                 continue
+
             p_cls = tuple(p.get("class"))
 
             class_stats[p_cls]["total"] += 1
@@ -165,6 +170,14 @@ class PageProfile(object):
         :rtype: int
         """
         return self.class_sizes.get(name, ClsSize.plain)
+
+    def is_poem(self):
+        """
+        Figures out if the piece is a poem based on how many different classes
+        it has. Basically if there's only the main title + plain text - it's a
+        poem.
+        """
+        return len(self.class_sizes) <= 2
 
 
 class Piece(object):
