@@ -16,33 +16,33 @@ from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
-from . import Piece
+from . import Piece, MainPage
 
 DONE = 1
 artist_q = queue.Queue()
 
-def fetch_artist(output_dir, main_url):
+def fetch_artist(output_dir):
     """
     Reads artist links
     """
     link = artist_q.get()
     while link != DONE:
-        href = link.get('href').lower()
-        log = logging.getLogger(href[:-1])
+        href = link.url
+        # We use the artist page name to make the logs easier
+        log = logging.getLogger(link.get_path()[:-1])
         try:
             log.debug("Started fetching artist")
-            full_link = main_url + "/" + href
-            name = link.text
-            artist_dir = os.path.join(output_dir, href[:-1])
+            name = link.name
+            artist_dir = os.path.join(output_dir, link.get_path())
             os.mkdir(artist_dir)
             with open(os.path.join(artist_dir, 'artist.json'), 'w',
                       encoding="utf-8") as f:
-                json.dump({ "name": name, "url": full_link }, f,
+                json.dump({ "name": name, "url": link.url }, f,
                           ensure_ascii=False, indent=4)
-            soup = BeautifulSoup(request.urlopen(full_link))
+            soup = BeautifulSoup(request.urlopen(link.url))
             piece_links = []
-            for link in soup.find_all("a"):
-                href = urlparse(link.get('href')).path
+            for anchor in soup.find_all("a"):
+                href = urlparse(anchor.get('href')).path
                 if not href:
                     continue
 
@@ -58,12 +58,12 @@ def fetch_artist(output_dir, main_url):
                 piece_links.append(href)
 
             log.debug("found %d pieces", len(piece_links))
-            for link in piece_links:
-                piece_name = os.path.splitext(link)[0]
+            for piece_url in piece_links:
+                piece_name = os.path.splitext(piece_url)[0]
                 piece_folder = os.path.join(artist_dir, piece_name)
                 log.debug("Creating folder for piece: %s", piece_folder)
                 os.mkdir(piece_folder)
-                piece_url = full_link + link
+                piece_url = link.url + piece_url
                 log.debug("Getting piece: %s", piece_url)
                 try:
                     piece = Piece(piece_url)
@@ -127,30 +127,23 @@ def main():
         logging.basicConfig(format=log_fmt, level=logging.INFO)
 
     logging.info("writing to folder: %s", arguments.output_dir)
+    if os.path.exists(arguments.output_dir):
+        parser.error("output folder: %s exists" % arguments.output_dir)
     os.mkdir(arguments.output_dir)
 
     logging.info("using %d threads", arguments.threads)
     for i in range(arguments.threads):
-        t = threading.Thread(
+        thread = threading.Thread(
             target=fetch_artist,
-            args=(arguments.output_dir, arguments.url)
+            args=(arguments.output_dir,)
         )
-        t.daemon = True
-        t.start()
+        thread.daemon = True
+        thread.start()
 
-    main_soup = BeautifulSoup(request.urlopen(arguments.url))
-    links = main_soup.find_all(artist_a_filter)
-    link_urls = []
-    clean_links = []
-    for link in links:
-        if link.get('href') in link_urls:
-            continue
-        clean_links.append(link)
-        link_urls.append(link.get('href'))
-
-
+    main_page = MainPage(arguments.url)
+    links = main_page.get_artist_links()
     logging.info("Started going over %d links", len(links))
-    for link in clean_links:
+    for link in links:
         artist_q.put(link)
 
     for i in range(arguments.threads):

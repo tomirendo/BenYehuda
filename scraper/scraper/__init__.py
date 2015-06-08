@@ -2,9 +2,13 @@ import os
 import json
 from enum import IntEnum
 from urllib import request
+from urllib import parse as urlparse
 from collections import Counter, defaultdict
 
 from bs4 import BeautifulSoup
+
+from . import helpers
+from .main_page import MainPage
 
 def text_p_filter(tag):
     """
@@ -189,7 +193,7 @@ class Piece(object):
     """
     Holds the piece's name, url and chapters.
     """
-    def __init__(self,  url, name=None, html=None):
+    def __init__(self, url, name=None, html=None):
         """
         :param name: Piece name
         :type name: str
@@ -207,26 +211,6 @@ class Piece(object):
         self.contents = self._scrape_contents()
         if not self.name:
             self.name = self.contents[0]["text"]
-
-    @staticmethod
-    def clean_text(element):
-        """
-        Removes whitespace from an element's text. Linebreaks and other
-        whitespaces inside a single tag are meaningless. IE:
-
-        >>> e = BeautifulSoup('''
-        ... <p>This whole thing
-        ... is just one line.       No need
-        ... for breaks!!!
-        ... </p>
-        ... ''')
-        >>> Piece.clean_text(e)
-        'This whole thing is just one line No need for breaks!!!'
-
-        :param element: An html element
-        :type element: bs4.element
-        """
-        return " ".join(element.text.split())
 
     def _scrape_contents(self):
         """
@@ -248,7 +232,7 @@ class Piece(object):
         contents = []
         for tag in self.soup.find_all(text_p_filter):
             contents.append({
-                "text": self.clean_text(tag),
+                "text": helpers.clean_text(tag),
                 "type": self.profile.get_class_value(tuple(tag.get("class")))
             })
         return contents
@@ -332,7 +316,6 @@ class Piece(object):
             "url": self.url,
             "contents": self.contents
         }
-
 
 class Creator(object):
     """
