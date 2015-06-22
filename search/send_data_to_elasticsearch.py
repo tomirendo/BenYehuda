@@ -1,7 +1,7 @@
 from main import models
 import urllib,json
 from itertools import count
-from data.url import url,index_url
+from search.url import url,index_url
 
 def encoded_json_for_object(obj):
     return json.dumps(obj.to_dict()).encode('utf8')
