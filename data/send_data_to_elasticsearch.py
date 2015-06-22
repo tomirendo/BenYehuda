@@ -11,13 +11,10 @@ def send_collection(collection,object_name):
     for obj,idx in zip(collection,count(1)):
         data = encoded_json_for_object(obj)
         req =  urllib.request.Request( url.add_path(idx).to_url(),data,method='PUT')
-        try :
-            print(urllib.request.urlopen(req).read())
-        except :
-            pass
+        print(urllib.request.urlopen(req).read())
 
 def collection_from_model(model):
     return model.objects.all()
-
-send_collection(collection_from_model(models.Creator),'creator')
-send_collection(collection_from_model(models.Piece),'piece')
+if __name__ == '__main__':
+    send_collection(collection_from_model(models.Creator),'creator')
+    send_collection(collection_from_model(models.Piece),'piece')
