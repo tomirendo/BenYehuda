@@ -1,10 +1,14 @@
 import os
 import json
-from enum import Enum
+from enum import IntEnum
 from urllib import request
+from urllib import parse as urlparse
 from collections import Counter, defaultdict
 
 from bs4 import BeautifulSoup
+
+from . import helpers
+from .main_page import MainPage
 
 def text_p_filter(tag):
     """
@@ -13,11 +17,20 @@ def text_p_filter(tag):
 
     >>> soup = BeautifulSoup('<p></p><p><span>Hello1</span></p>')
     >>> soup.find(text_p_filter)
-    <p><span>Hello1</span></p>
-    """
-    return tag.name == 'p' and tag.text
+    <p class="a1"><span>Hello1</span></p>
 
-class ClsSize(Enum):
+    It also removes paragraphs where the text is in <a> tags.
+    """
+    # Basic filtering - we won't work on paragraphs without class
+    if not (tag.name == 'p' and tag.text and tag.get("class")):
+        return False
+    links = tag.find_all('a')
+    link_text = "".join(l.text for l in links)
+    if link_text == tag.text:
+        return False
+    return True
+
+class ClsSize(IntEnum):
     """
     Enum for the different class sizes for easy understanding
     """
@@ -97,6 +110,10 @@ class PageProfile(object):
             if cls in class_sizes:
                 continue
 
+            # Wordless are ignored
+            if not cls_details[1]["words"]:
+                continue
+
             cls_size_len = len(class_sizes)
             if cls_size_len in len_to_size:
                 class_sizes[cls] = len_to_size[cls_size_len]
@@ -128,10 +145,11 @@ class PageProfile(object):
         :rtype: dict
         """
         class_stats = defaultdict(Counter)
-        for p in self._soup.find_all("p"):
+        for p in self._soup.find_all(text_p_filter):
             # We currently don't handle plain paragraphs
             if not p.get("class"):
                 continue
+
             p_cls = tuple(p.get("class"))
 
             class_stats[p_cls]["total"] += 1
@@ -162,12 +180,20 @@ class PageProfile(object):
         """
         return self.class_sizes.get(name, ClsSize.plain)
 
+    def is_poem(self):
+        """
+        Figures out if the piece is a poem based on how many different classes
+        it has. Basically if there's only the main title + plain text - it's a
+        poem.
+        """
+        return len(self.class_sizes) <= 2
+
 
 class Piece(object):
     """
     Holds the piece's name, url and chapters.
     """
-    def __init__(self, name, url, html=None):
+    def __init__(self, url, name=None, html=None):
         """
         :param name: Piece name
         :type name: str
@@ -183,26 +209,8 @@ class Piece(object):
         self.soup = BeautifulSoup(html)
         self.profile = PageProfile(self.soup)
         self.contents = self._scrape_contents()
-
-    @staticmethod
-    def clean_text(element):
-        """
-        Removes whitespace from an element's text. Linebreaks and other
-        whitespaces inside a single tag are meaningless. IE:
-
-        >>> e = BeautifulSoup('''
-        ... <p>This whole thing
-        ... is just one line.       No need
-        ... for breaks!!!
-        ... </p>
-        ... ''')
-        >>> Piece.clean_text(e)
-        'This whole thing is just one line No need for breaks!!!'
-
-        :param element: An html element
-        :type element: bs4.element
-        """
-        return " ".join(element.text.split())
+        if not self.name:
+            self.name = self.contents[0]["text"]
 
     def _scrape_contents(self):
         """
@@ -224,7 +232,7 @@ class Piece(object):
         contents = []
         for tag in self.soup.find_all(text_p_filter):
             contents.append({
-                "text": self.clean_text(tag),
+                "text": helpers.clean_text(tag),
                 "type": self.profile.get_class_value(tuple(tag.get("class")))
             })
         return contents
@@ -255,14 +263,48 @@ class Piece(object):
         # We shouldn't reach this but just in case
         return item["text"]
 
+    @staticmethod
+    def poem_markdown_map(item):
+        """
+        Converts markdown specifically for poems. Uses linebreaks instead of
+        paragraphs for most situations
+
+        :param item: A single element from the internal contents
+        :type item: dict
+        :return: The item as a markdown string
+        :rtype: str
+        """
+        if item["type"] == ClsSize.plain:
+            if item["text"]:
+                # Two spaces to indicate newline in markdown
+                return item["text"] + "  "
+            return "\n"
+
+        return Piece.markdown_map(item)
+
+    @staticmethod
+    def remove_last_empty_lines(lines):
+        """
+        :param lines: A list of text lines
+        :type lines: list[str]
+        :return: A list of lines were the last line has contents
+        :rtype: list[str]
+        """
+        while lines and not lines[-1].split():
+            lines.pop()
+        return lines
+
     def as_markdown(self):
         """
         Converts the internal contents format to basic markdown language
         :return: The chapter as markdown
         :rtype: str
         """
-        # Two newlines are necessary to emphasize new paragraph
-        return "\r\n\r\n".join(map(self.markdown_map, self.contents))
+        if self.profile.is_poem():
+            lines = list(map(self.poem_markdown_map, self.contents))
+            return "\n".join(self.remove_last_empty_lines(lines))
+        # Two newlines are necessary for new paragraph in markdown
+        return "\n\n".join(map(self.markdown_map, self.contents))
 
     def as_dict(self):
         """
@@ -274,7 +316,6 @@ class Piece(object):
             "url": self.url,
             "contents": self.contents
         }
-
 
 class Creator(object):
     """
