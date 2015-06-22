@@ -38,7 +38,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
     'main',
     'rest_framework',
-    'haystack',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -76,14 +75,7 @@ REST_FRAMEWORK = {
 
 }
 
-HAYSTACK_CONNECTIONS = {
-    'default': {
-        'ENGINE': 'haystack.backends.solr_backend.SolrEngine',
-        'URL': 'http://127.0.0.1:8983/solr'
-        # ...or for multicore...
-        # 'URL': 'http://127.0.0.1:8983/solr/mysite',
-    },
-}
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 
