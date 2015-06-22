@@ -18,18 +18,9 @@ class url(str):
         return url(self + '?q={}'.format(query))
 
     def to_url(self):
-<<<<<<< HEAD
-        """
-            Quotes url in the RIGHT WAY!
-        """
-        begin,*end = self.split('?')
-        end_str = '?'.join(quote(p) for p in end)
-        final = begin +'?'+ end_str
-=======
         begin,*end = self.split('?q=')
         end_str = quote('?q='.join(end))
         final = begin +'?q='+ end_str
->>>>>>> ea0a983c8129d48e794575ee92b3e573c0138a88
         return final
 
 index_url = url('http://localhost:9200/benyehuda/')
