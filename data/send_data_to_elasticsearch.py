@@ -23,7 +23,7 @@ def send_collection(collection,object_name):
         data = encoded_json_for_object(obj)
         req =  urllib.request.Request( url.add_path(count).to_url(),data,method='PUT')
         print(urllib.request.urlopen(req).read())
-    print idx
+        print idx
 
 
 def collection_from_model(model):
