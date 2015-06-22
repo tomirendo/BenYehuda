@@ -1,5 +1,6 @@
 from urllib.request import quote
 
+
 class url(str):
     def add_path(self,addition):
         """
@@ -9,7 +10,7 @@ class url(str):
             addition = '/' + addition
         return url(self + str(addition) + '/')
 
-    def add_query(query):
+    def add_query(self,query):
         return url(self + '?q={}'.format(query))
 
     def to_url(self):
@@ -17,7 +18,7 @@ class url(str):
             Quotes url in the RIGHT WAY!
         """
         begin,*end = self.split('?')
-        end_str = '?'.join(urllib.request.quote(p) for p in end)
+        end_str = '?'.join(quote(p) for p in end)
         final = begin +'?'+ end_str
         return final
 
