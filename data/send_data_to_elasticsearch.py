@@ -8,7 +8,7 @@ class url(str):
             addition = '/' + addition
         return url(self + str(addition) + '/')
     def to_url(self):
-	begin,*end = self.split('?')
+        begin,*end = self.split('?')
         final = begin +'?'+ '?'.join(map(urllib.request,quote(end))
         return final
 
