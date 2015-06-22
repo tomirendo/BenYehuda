@@ -22,3 +22,9 @@ def send_collection(collection,object_name):
         req =  urllib.request.Request( url.add_path(count).to_url(),data,method='PUT')
         print(urllib.request.urlopen(req).read())
 
+
+def collection_from_model(model):
+    return model.objects.all()
+    
+send_collection(collection_from_model(model.Creator),'creator')
+send_collection(collection_from_model(model.Piece),'piece')
