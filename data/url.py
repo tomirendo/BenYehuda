@@ -16,9 +16,9 @@ class url(str):
         """
             Quotes url in the RIGHT WAY!
         """
-        begin,*end = self.split('?')
-        end_str = '?'.join(urllib.request.quote(p) for p in end)
-        final = begin +'?'+ end_str
+        begin,*end = self.split('?q=')
+        end_str = '?q='.join(urllib.request.quote(p) for p in end)
+        final = begin +'?q='+ end_str
         return final
 
 index_url = url('http://localhost:9200/benyehuda/')
