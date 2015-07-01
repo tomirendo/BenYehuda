@@ -357,12 +357,12 @@ class Creator(object):
                 yield ''.join([self.url,'/',file_path])
 
     def get_pieces(self,verbos = False):
-        for piece_url in self.get_pieces_urls():
+        for piece_url in set(self.get_pieces_urls()):
             try :
                 piece = Piece(piece_url)
                 if verbos: print("Collected Piece : " + piece.name)
-            except :    
-                if verbos : print("Couldn't collect piece :" + piece.name)
+            except Exception as e:    
+                if verbos : print("Couldn't collect piece {} due to exception : {}".format(piece_url,e))
             self.pieces.append(piece)
 
 
