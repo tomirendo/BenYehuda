@@ -358,8 +358,11 @@ class Creator(object):
 
     def get_pieces(self,verbos = False):
         for piece_url in self.get_pieces_urls():
-            piece = Piece(piece_url)
-            if verbos: print("Collected Piece : " + piece.name)
+            try :
+                piece = Piece(piece_url)
+                if verbos: print("Collected Piece : " + piece.name)
+            except :    
+                if verbos : print("Couldn't collect piece :" + piece.name)
             self.pieces.append(piece)
 
 
