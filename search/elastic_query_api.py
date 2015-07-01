@@ -1,4 +1,4 @@
-from url import url,index_url
+from .url import url,index_url
 import urllib,json
 
 def query_url(obj_type,query):

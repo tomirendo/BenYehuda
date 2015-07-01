@@ -3,7 +3,7 @@ import glob
 import json
 import unittest
 
-from scraper import Piece, ClsSize
+from scraper import Piece, ClsSize,Creator
 
 class PieceParseTest(unittest.TestCase):
     """
@@ -39,3 +39,5 @@ class PieceParseTest(unittest.TestCase):
         html = self.get_t_file("bialik", "bia002.html")
         piece = Piece("http://benyehuda.org/bialik/bia002.html", html=html)
         self.assertEqual(piece.name, "מִשּׁוּט בַּמֶּרְחַקִּים")
+
+
