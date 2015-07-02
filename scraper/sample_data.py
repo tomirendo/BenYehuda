@@ -5,9 +5,8 @@ from scraper import Creator
 creator = Creator('חיים נחמן ביאליק','http://benyehuda.org/bialik/',verbos = True)
 
 def hebrew_to_english(text):
-    translate = {chr(ord('א')+heb):eng for heb,eng in zip(range(27),"abgdhwzhtycclmmnnseppzzkkrst")} 
-    translate[' '] = '-'
-    return "".join(translate[i] for i in text if i in translate)
+    translate =  {'ת': 's', 't': 't', 'כ': 'c', 'y': 'y', 'l': 'l', 'c': 'c', 'א': 'a', 'a': 'a', 'מ': 'm', 'ן': 'n', 'q': 'q', 'ר': 'k', 'ד': 'd', 'פ': 'p', 'u': 'u', 'ב': 'b', 'י': 'y', 'h': 'h', 'ס': 's', 'k': 'k', 'w': 'w', 'd': 'd', 'צ': 'z', 'e': 'e', 'ל': 'l', 'm': 'm', 'b': 'b', 'ז': 'z', 'ג': 'g', 'ע': 'e', 'ח': 'h', 'i': 'i', 'ק': 'k', 'n': 'n', 'ט': 't', 'ם': 'm', 's': 's', 'ש': 'r', 'r': 'r', 'z': 'z', 'ף': 'p', 'ה': 'h', 'v': 'v', ' ': ' ', 'x': 'x', 'o': 'o', 'j': 'j', 'p': 'p', 'f': 'f', 'ו': 'w', 'נ': 'n', 'ך': 'c', 'ץ': 'z', 'g': 'g'}
+    return "".join(translate.get(i,'') for i in text)
 
 sample_dir = 'samples'
 

@@ -4,6 +4,7 @@ from .NikudFunctions import remove_nikud
 # Create your models here.
 class Creator(models.Model):
     name = models.CharField(max_length = 250)
+    english_name = models.CharField(max_length = 250)
     birth = models.IntegerField(default = 1900)
     death = models.IntegerField(default = 0)
     description = models.CharField(max_length = 2000)
@@ -13,6 +14,7 @@ class Creator(models.Model):
 
     def to_dict(self):
         return {'name' : self.name,
+                'english_name' : self.english_name,
                 'description' : self.description,
                 'id' : self.id,
                 'object_type' : 'creator',
@@ -30,6 +32,7 @@ class Translator(models.Model):
  
 class Piece(models.Model):
     name = models.CharField(max_length = 250)
+    english_name = models.CharField(max_length = 250)
     creator = models.ForeignKey(Creator)
     translator = models.ForeignKey(Translator,null = True,blank = True)
     date = models.DateField(null = True,blank = True)
@@ -43,6 +46,7 @@ class Piece(models.Model):
         return remove_nikud(self.get_full_text())
     def to_dict(self):
         return {'name' : self.name,
+                'english_name' : self.english_name,
                 'creator_name' : self.creator.name,
                 'creator_id' : self.creator.id,
                 'text' : self.get_full_text(),
