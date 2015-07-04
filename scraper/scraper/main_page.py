@@ -1,3 +1,6 @@
+"""
+Class for parsing the main Ben Yehuda site page
+"""
 from urllib import request
 from urllib import parse as urlparse
 
