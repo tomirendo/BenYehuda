@@ -11,12 +11,11 @@ import argparse
 import threading
 import queue
 from urllib import request
-from urllib.error import URLError
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 
-from . import Piece, MainPage
+from . import Piece, MainPage, ArtistPage
 
 DONE = 1
 artist_q = queue.Queue()
@@ -27,59 +26,10 @@ def fetch_artist(output_dir):
     """
     link = artist_q.get()
     while link != DONE:
-        href = link.url
-        # We use the artist page name to make the logs easier
-        log = logging.getLogger(link.get_path()[:-1])
+        log = logging.getLogger(urlparse(link.url).path[:-1])
         try:
-            log.debug("Started fetching artist")
-            name = link.name
-            artist_dir = os.path.join(output_dir, link.get_path())
-            os.mkdir(artist_dir)
-            with open(os.path.join(artist_dir, 'artist.json'), 'w',
-                      encoding="utf-8") as f:
-                json.dump({ "name": name, "url": link.url }, f,
-                          ensure_ascii=False, indent=4)
-            soup = BeautifulSoup(request.urlopen(link.url))
-            piece_links = []
-            for anchor in soup.find_all("a"):
-                href = urlparse(anchor.get('href')).path
-                if not href:
-                    continue
-
-                if href in piece_links:
-                    continue
-
-                if '/' in href:
-                    continue
-
-                if "@" in href:
-                    continue
-
-                piece_links.append(href)
-
-            log.debug("found %d pieces", len(piece_links))
-            for piece_url in piece_links:
-                piece_name = os.path.splitext(piece_url)[0]
-                piece_folder = os.path.join(artist_dir, piece_name)
-                log.debug("Creating folder for piece: %s", piece_folder)
-                os.mkdir(piece_folder)
-                piece_url = link.url + piece_url
-                log.debug("Getting piece: %s", piece_url)
-                try:
-                    piece = Piece(piece_url)
-                except URLError as err:
-                    log.error("Got url-error on piece: %s", piece_name)
-                    log.exception(err)
-                    continue
-                with open(os.path.join(piece_folder, piece_name + ".md"), 'w',
-                          encoding="utf-8") as f:
-                    f.write(piece.as_markdown())
-
-                with open(os.path.join(piece_folder, piece_name + ".json"), 'w',
-                          encoding="utf-8") as f:
-                    json.dump(piece.as_dict(), f, ensure_ascii=False, indent=4)
-
-            log.info("Finished fetching artist")
+            artist = ArtistPage(link.url, link.name)
+            artist.fetch_to_folder(output_dir)
         except (KeyboardInterrupt, SystemExit):
             log.error("Got keyboard interrupt!")
             return

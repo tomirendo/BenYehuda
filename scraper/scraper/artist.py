@@ -2,7 +2,9 @@ import os
 import json
 import logging
 from urllib import request
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
+from urllib.error import URLError
+
 
 from bs4 import BeautifulSoup
 
@@ -15,7 +17,7 @@ class ArtistPage(object):
     """
     def __init__(self, url, name, html=None):
         # log using the artists' page name but remove the trailing `/`
-        self.page_name = urlparse(url).path[:-1]
+        self.page_name = os.path.basename(urlparse(url).path[:-1])
         self.log = logging.getLogger(self.page_name)
         self.url = url
         self.name = name
@@ -51,6 +53,9 @@ class ArtistPage(object):
     def fetch_to_folder(self, main_folder):
         """
         Downloads, parses and saves all the pieces from the given artist
+        :param main_folder: The parent dir in which we'll place a directory with
+                            the artist's name
+        :type main_folder: str
         """
         artist_dir = os.path.join(main_folder, self.page_name)
         self.log.info("Fetching artist details to: %s", artist_dir)
@@ -64,10 +69,10 @@ class ArtistPage(object):
         piece_links = self.get_piece_links()
         for link in piece_links:
             try:
-                piece = Piece(piece_url)
+                piece = Piece(urljoin(self.url, link.url))
             except URLError as err:
-                log.error("Got url-error on piece: %s", piece_name)
-                log.exception(err)
+                self.log.error("Got url-error on piece: %s", link.name)
+                self.log.exception(err)
                 continue
 
             piece.fetch_to_folder(artist_dir)
