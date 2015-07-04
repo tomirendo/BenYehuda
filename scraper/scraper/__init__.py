@@ -224,10 +224,10 @@ class Piece(object):
         """
         self.name = name
         self.url = url
-        # Log name will use the url so it will look like artist.piece
+        # Log name will use the url so it will look like 'artist.piece'
         piece_path = os.path.splitext(urlparse.urlparse(self.url).path[:-1])[0]
         self.log = logging.getLogger(piece_path.replace('/', '.'))
-        # If the fetch_to_folder is used we'll need the piece name by itself
+        # If the fetch_to_folder is used we'll need the piece name from the url
         self.folder_name = os.path.splitext(os.path.basename(piece_path))[0]
         if html is None:
             html = request.urlopen(url).read()
@@ -351,6 +351,7 @@ class Piece(object):
         :type main_folder: str
         """
         output_dir = os.path.join(main_folder, self.folder_name)
+        self.log.debug('Creating folder for piece: %s', output_dir)
         os.mkdir(output_dir)
 
         with open(os.path.join(output_dir, self.folder_name + ".md"), 'w',
@@ -390,7 +391,7 @@ class Creator(object):
             try :
                 piece = Piece(piece_url)
                 if verbos: print("Collected Piece : " + piece.name)
-            except Exception as e:    
+            except Exception as e:
                 if verbos : print("Couldn't collect piece {} due to exception : {}".format(piece_url,e))
             self.pieces.append(piece)
 
@@ -411,3 +412,5 @@ class BenYehuda(object):
         :rtype: list[Creator]
         """
         raise NotImplementedError()
+
+from .artist import ArtistPage
