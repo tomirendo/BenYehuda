@@ -5,7 +5,7 @@ import shutil
 import unittest
 import tempfile
 
-from scraper import Piece, ClsSize
+from scraper import Piece, ClsSize, Creator
 
 class PieceParseTest(unittest.TestCase):
     """

@@ -31,6 +31,25 @@ def text_p_filter(tag):
         return False
     return True
 
+def filter_creator_links(hrefs):
+    """
+    Filters out irrelevant links from a list of href's
+    Finds only the links to creator's pieces
+    """
+    for ref in hrefs:
+        ref = str(ref)
+        if ref and ref.endswith('.html') and 'http' not in ref:
+            yield ref
+
+def find_hrefs(url):
+    """
+    Returns all hrefs from a url
+    """
+    website = BeautifulSoup(request.urlopen(url))
+    for a_tag in website.findAll('a'):
+        yield "".join(a_tag.get('href',''))
+
+
 class ClsSize(IntEnum):
     """
     Enum for the different class sizes for easy understanding
@@ -350,12 +369,31 @@ class Creator(object):
     """
     Holds the creator's name and url
     """
-    def __init__(self, name, url):
+    def __init__(self, name, url,verbos = False):
         self.name = name
         self.url = url
+        self.pieces = []
+        self.get_pieces(verbos = verbos)
 
-    def get_pieces(self):
-        raise NotImplementedError()
+    def get_pieces_files(self):
+        return filter_creator_links(find_hrefs(self.url))
+
+    def get_pieces_urls(self):
+        for file_path in self.get_pieces_files():
+            if self.url.endswith('/'):
+                yield ''.join([self.url,file_path])
+            else :
+                yield ''.join([self.url,'/',file_path])
+
+    def get_pieces(self,verbos = False):
+        for piece_url in set(self.get_pieces_urls()):
+            try :
+                piece = Piece(piece_url)
+                if verbos: print("Collected Piece : " + piece.name)
+            except Exception as e:    
+                if verbos : print("Couldn't collect piece {} due to exception : {}".format(piece_url,e))
+            self.pieces.append(piece)
+
 
 class BenYehuda(object):
     """
