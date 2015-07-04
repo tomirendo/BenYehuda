@@ -39,7 +39,7 @@ class NamedLink(object):
         return urlparse.urlparse(self.url).path[1:]
 
     def __hash__(self):
-        return hash(self.url + "-" + self.name)
+        return hash(self.url)
 
     def __eq__(self, other):
         """
