@@ -5,17 +5,13 @@ directory structure.
 import os
 import sys
 import time
-import json
 import logging
 import argparse
 import threading
 import queue
-from urllib import request
 from urllib.parse import urlparse
 
-from bs4 import BeautifulSoup
-
-from . import Piece, MainPage, ArtistPage
+from . import MainPage, ArtistPage
 
 DONE = 1
 artist_q = queue.Queue()
