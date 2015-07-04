@@ -1,3 +1,6 @@
+"""
+Class for parsing an artist page
+"""
 import os
 import json
 import logging
@@ -63,7 +66,7 @@ class ArtistPage(object):
         # Create JSON file with basic details about the artist
         with open(os.path.join(artist_dir, 'artist.json'), 'w',
                   encoding='utf-8') as details_f:
-            json.dump({ "name": self.name, "url": self.url }, details_f,
+            json.dump({"name": self.name, "url": self.url}, details_f,
                       ensure_ascii=False, indent=4)
 
         piece_links = self.get_piece_links()
