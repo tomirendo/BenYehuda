@@ -395,22 +395,4 @@ class Creator(object):
                 if verbos : print("Couldn't collect piece {} due to exception : {}".format(piece_url,e))
             self.pieces.append(piece)
 
-
-class BenYehuda(object):
-    """
-    Main class for the BenYehuda project scraper
-    """
-    def get_news(self):
-        return []
-
-    def get_pieces(self):
-        return []
-
-    def get_creators(self):
-        """
-        :return: A list of all the site's creators
-        :rtype: list[Creator]
-        """
-        raise NotImplementedError()
-
 from .artist import ArtistPage
