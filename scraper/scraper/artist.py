@@ -2,6 +2,7 @@
 Class for parsing an artist page
 """
 import os
+import re
 import json
 import logging
 from hashlib import md5
