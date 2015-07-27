@@ -44,8 +44,8 @@ class ArtistPage(object):
         if not years_text:
             return None
         # Convert the two years to ints and sorts them from small to large
-        years = sorted(map(int, self.YEARS_RE.findall(years_text)[0]))
-        return "-".join(years)
+        year1, year2 = sorted(map(int, self.YEARS_RE.findall(years_text)[0]))
+        return "{}-{}".format(year1, year2)
 
     def get_piece_links(self):
         """
@@ -81,7 +81,7 @@ class ArtistPage(object):
             "name": self.name,
             "url": self.url,
             "md5": self.md5,
-            "years": self.get_years
+            "years": self.get_years()
         }
 
     def fetch_to_folder(self, main_folder):

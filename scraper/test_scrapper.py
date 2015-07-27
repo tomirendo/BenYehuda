@@ -86,3 +86,13 @@ class ArtistPageTest(BaseTestCase):
             "ben_netanya.html"
         ].sort()
         self.assertEqual(piece_urls, expected_urls)
+
+    def test_to_dict(self):
+        html = self.get_artist_page("teller_zvi")
+        artist = ArtistPage("http://benyehuda.org/teller_zvi/", "צבי אלעזר טלר", html)
+        self.assertEqual(artist.as_dict(), {
+            "name": "צבי אלעזר טלר",
+            "years": "1840-1914",
+            "url": "http://benyehuda.org/teller_zvi/",
+            "md5": "115bdd8046e27fb5ed8cad03e150f33a"
+        })
