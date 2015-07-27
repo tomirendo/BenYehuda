@@ -77,6 +77,7 @@ class ArtistPage(object):
         :return: The artist as an easy to json dict
         :rtype: dict
         """
+        #TODO: Add copyright parsing - example page: http://benyehuda.org/cohen_yisrael/
         return {
             "name": self.name,
             "url": self.url,
