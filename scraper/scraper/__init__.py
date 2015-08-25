@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from enum import IntEnum
 from urllib import request
 from urllib import parse as urlparse
@@ -223,11 +224,17 @@ class Piece(object):
         """
         self.name = name
         self.url = url
+        # Log name will use the url so it will look like 'artist.piece'
+        piece_path = os.path.splitext(urlparse.urlparse(self.url).path[:-1])[0]
+        self.log = logging.getLogger(piece_path.replace('/', '.'))
+        # If the fetch_to_folder is used we'll need the piece name from the url
+        self.folder_name = os.path.splitext(os.path.basename(piece_path))[0]
         if html is None:
             html = request.urlopen(url).read()
         self.soup = BeautifulSoup(html)
         self.profile = PageProfile(self.soup)
         self.contents = self._scrape_contents()
+        # By default name is first paragraph of the piece
         if not self.name:
             self.name = self.contents[0]["text"]
 
@@ -336,6 +343,29 @@ class Piece(object):
             "contents": self.contents
         }
 
+    def fetch_to_folder(self, main_folder):
+        """
+        Saves the parsed and original information from this piece into a folder
+        with the pieces' name
+        :param main_folder: The folder in which to save the piece folder in
+        :type main_folder: str
+        """
+        output_dir = os.path.join(main_folder, self.folder_name)
+        self.log.debug('Creating folder for piece: %s', output_dir)
+        os.mkdir(output_dir)
+
+        with open(os.path.join(output_dir, self.folder_name + ".md"), 'w',
+                  encoding="utf-8") as f:
+            f.write(self.as_markdown())
+
+        with open(os.path.join(output_dir, self.folder_name + ".orig.html"), 'w',
+                  encoding="utf-8") as f:
+            f.write(str(self.soup))
+
+        with open(os.path.join(output_dir, self.folder_name + ".json"), 'w',
+                  encoding="utf-8") as f:
+            json.dump(self.as_dict(), f, ensure_ascii=False, indent=4)
+
 class Creator(object):
     """
     Holds the creator's name and url
@@ -361,24 +391,8 @@ class Creator(object):
             try :
                 piece = Piece(piece_url)
                 if verbos: print("Collected Piece : " + piece.name)
-            except Exception as e:    
+            except Exception as e:
                 if verbos : print("Couldn't collect piece {} due to exception : {}".format(piece_url,e))
             self.pieces.append(piece)
 
-
-class BenYehuda(object):
-    """
-    Main class for the BenYehuda project scraper
-    """
-    def get_news(self):
-        return []
-
-    def get_pieces(self):
-        return []
-
-    def get_creators(self):
-        """
-        :return: A list of all the site's creators
-        :rtype: list[Creator]
-        """
-        raise NotImplementedError()
+from .artist import ArtistPage

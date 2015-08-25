@@ -56,3 +56,6 @@ target/
 # Editors
 .idea
 *.sublime-workspace
+
+# Filesystem
+.DS_Store
