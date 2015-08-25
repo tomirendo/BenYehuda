@@ -1,0 +1,7 @@
+{{ object.name }}
+{{ object.english_name }}
+{{ object.creator.name }}
+{{ object.translator.name }}
+{{ object.date }}
+{{ object.get_full_text }}
+{{ object.get_full_text_without_nikud }}
