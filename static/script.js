@@ -205,14 +205,27 @@ function DialogController($scope, $mdDialog) {
   $scope.global_scope = global_scope;
   $scope.results = [];
 
+$scope.remove_nikud  = function(txt){
+    var res = ""
+    var minNikud = 1416;
+    var maxNikud = 1479;
+    var alef = 1488;
+
+    for (var i=0; i < txt.length; i++){
+        if (txt.charCodeAt(i) < minNikud || txt.charCodeAt(i) >= alef){
+            res += txt[i];
+        }
+    }
+    return res;
+};
   $scope.submit = function(search_term){
     $scope.results = [];
     $scope.show_load_bar = true;
     global_scope.search_bar = $scope.search_bar;
 
-    $http.get("/search_solr/"+search_term+"/").
+    $http.get("/search/?q="+$scope.remove_nikud(search_term)).
     success(function(data, status, headers, config) {
-    $scope.results= data.response.docs;
+    $scope.results= data;
     $scope.show_load_bar = false;
 
     // this callback will be called asynchronously

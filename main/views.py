@@ -4,9 +4,6 @@ from .models import Piece
 from urllib.request import urlopen
 from urllib.parse import quote 
 
-def search(reqest,search_term):
-    return HttpResponse(urlopen("http://localhost:8983/solr/gettingstarted/select?q="+quote(search_term)+"&wt=json&indent=true").read())
-
 # Create your views here.
 def download(request,id):
     p = Piece.objects.get(id = id)

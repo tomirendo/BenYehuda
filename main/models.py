@@ -1,5 +1,6 @@
 from django.db import models
 from .NikudFunctions import remove_nikud
+import json
 
 # Create your models here.
 class Creator(models.Model):
@@ -14,11 +15,13 @@ class Creator(models.Model):
 
     def to_dict(self):
         return {'name' : self.name,
-                'english_name' : self.english_name,
+                'english_name':self.english_name,
                 'description' : self.description,
                 'id' : self.id,
                 'object_type' : 'creator',
                 'wikipedia_link' : self.wikipedia_link}
+
+
 
 
 class Translator(models.Model):
@@ -30,6 +33,13 @@ class Translator(models.Model):
     def __str__(self):
         return "<translateor : {} >".format(self.name.encode("utf8"))
  
+    def to_dict(self):
+        return {'name' : self.name,
+                }
+
+    def to_str(self):
+        return json.dumps(self.to_dict())
+
 class Piece(models.Model):
     name = models.CharField(max_length = 250)
     english_name = models.CharField(max_length = 250)
@@ -41,9 +51,13 @@ class Piece(models.Model):
         return "<piece : {}>".format(self.name.encode("utf8"))
 
     def get_full_text(self):
-        return str.join("",(i.text for i in self.chapters.all()))
+        return str.join("",
+            (str.join("",[i.name, i.text])
+                for i in self.chapters.all()))
+
     def get_full_text_without_nikud(self):
         return remove_nikud(self.get_full_text())
+
     def to_dict(self):
         return {'name' : self.name,
                 'english_name' : self.english_name,
@@ -53,6 +67,10 @@ class Piece(models.Model):
                 'text_without_nikud' : self.get_full_text_without_nikud(),
                 'id' : self.id,
                 'object_type' : 'piece'}
+
+
+    def to_str(self):
+        return json.dumps(self.to_dict())
 
 
 class Chapter(models.Model):
